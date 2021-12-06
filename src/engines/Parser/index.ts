@@ -86,16 +86,37 @@ export default class Parser {
       return ast;
     }
   };
+
+  /**
+    * Adds alphabets expressions
+    * @param {string} [expressionType=AccessVariable]
+    * @param {Array<string>} tokenTypes
+    * @returns {Parser}
+    */
   addAccessVariables(expressionType: string = "AccessVariable", tokenTypes: Array<string>): Parser {
     this.expressions.set(`ALPHABET`, this.templates.AccessVariables(expressionType, tokenTypes));
 
     return this;
   }
+
+  /**
+    * Adds numbers expressions
+    * @param {string} [expressionType=NumberLiteral]
+    * @param {Array<string>} tokenTypes
+    * @returns {Parser}
+    */
   addNumbers(expressionType: string = "NumberLiteral", tokenTypes: Array<string>): Parser {
     this.expressions.set(`NUMBER`, this.templates.Numbers(expressionType, tokenTypes));
 
     return this;
   }
+
+  /**
+    * Runs parser
+    * @param {Array<Token>} tokens
+    * @param {*} data
+    * @returns {AST}
+    */
   run(tokens: Array<Token>, data: any = { i: 0, stack: new Stack }): AST {
     const { expressions, plugins } = this;
     const ast = new AST(data?.type || "Main", {

@@ -10,6 +10,13 @@ export default class Compiler {
   parser = new Parser;
   executer = new Executer;
 
+  /**
+    * Runs interpreter
+    * @param {string} code
+    * @param {string} file
+    * @param {Stack} stack
+    * @returns {*}
+    */
   run(code: string, file: string, stack: Stack = new Stack): any {
     const { lexer, parser, executer } = this;
     const lexed = lexer.run(code, file, stack);

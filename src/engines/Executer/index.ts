@@ -32,32 +32,76 @@ export default class Executer {
     }
   };
 
+  /**
+    * Injects a callback before executing
+    * @param {Function} callback
+    * @returns {Executer}
+    */
   injectBefore(callback: Function): Executer {
     this.injected.before.push(callback);
 
     return this;
   }
+
+  /**
+    * Injects a callback after executing
+    * @param {Function} callback
+    * @returns {Executer}
+    */
   injectAfter(callback: Function): Executer {
     this.injected.after.push(callback);
 
     return this;
   }
+
+  /**
+    * Adds an expression
+    * @param {string} name
+    * @param {Function} expression
+    * @returns {Executer}
+    */
   addExpression(name: string, expression: Function): Executer {
     this.expressions.set(name, expression);
 
     return this;
   }
+
+  /**
+    * Adds multiple expressions
+    * @param {string} name
+    * @param {Array<Function>} expressions
+    * @returns {Executer}
+    */
   addExpressions(name: string, ...expressions: Array<Function>): Executer {
     for (const expression of expressions) this.expressions.set(name, expression);
 
     return this;
   }
+
+
+  /**
+    * Adds access variable expression template
+    * @param {string} [name=AccessVariable]
+    * @returns {Executer}
+    */
   addAccessVariable(name: string = "AccessVariable"): Executer {
     return this.addExpression(name, this.templates.AccessVariable);
   }
+
+  /**
+    * Adds numbers expression template
+    * @param {string} [name=NumberLiteral]
+    * @returns {Executer}
+    */
   addNumbers(name: string = "NumberLiteral"): Executer {
     return this.addExpression(name, this.templates.Numbers);
   }
+
+  /**
+    * Runs executer
+    * @param {AST} ast
+    * @returns {Promise<*>}
+    */
   async run(ast: AST): Promise<any> {
     const { expressions, plugins, injected } = this;
     const result: Array<Function> = [...injected.before];

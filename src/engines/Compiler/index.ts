@@ -10,6 +10,14 @@ export default class Compiler {
   parser = new Parser;
   transformer = new Transformer;
 
+  /**
+    * Runs compiler
+    * @param {string} code
+    * @param {string} file
+    * @param {Stack} stack
+    * @returns {string} Compiled code
+    */
+
   run(code: string, file: string, stack: Stack = new Stack): string {
     const { lexer, parser, transformer } = this;
     const lexed = lexer.run(code, file, stack);
