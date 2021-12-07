@@ -5,8 +5,28 @@ import Token from "../utils/Token.ts";
 import LexerError from "../utils/LexerError.ts";
 import LexerToken from "../interfaces/LexerToken.ts";
 
+interface Unknown {
+  type: string;
+  readonly value: unique symbol;
+};
+
 export default class Lexer {
   tokens: Array<LexerToken> = [];
+  unknown: (Unknown | any);
+
+  /**
+    * Adds unique symbol
+    * @returns {Lexer}
+    */
+
+  addUnknown(type: string): Lexer {
+    this.unknown = {
+      type,
+      value: Symbol("")
+    };
+
+    return this;
+  }
 
   /**
     * Adds a token
@@ -84,6 +104,7 @@ export default class Lexer {
     */
   run(code: string, file: string, stack: Stack = new Stack): Array<Token> {
     const result: Array<Token> = [];
+    const { tokens, unknown } = this;
     let c = 1;
     let l = 1;
 
@@ -94,7 +115,7 @@ export default class Lexer {
       const position = new Position(i, c, l, file);
       const trace = new Trace(`[Lexer]`, position);
 
-      for (const { type, value } of this.tokens) {
+      for (const { type, value } of tokens) {
         const raw = code.slice(i, i+value.length);
 
         if (value.length < code.length-i+1 && value === raw) {
@@ -106,7 +127,14 @@ export default class Lexer {
         }
       }
 
-      if (!next) throw new LexerError(`Unexpected character CHAR(${char} : ${char.charCodeAt(0)})`, { position, stack });
+      if (!next) {
+        if (unknown) result.push(new Token(unknown.type, unknown.value, {
+          raw: code[i],
+          trace,
+          stack
+        }));
+        else throw new LexerError(`Unexpected character CHAR(${char} : ${char.charCodeAt(0)})`, { position, stack });
+      }
 
       switch (char) {
         case "\n": {

@@ -75,6 +75,14 @@ class LexerError1 extends Error {
 }
 class Lexer1 {
     tokens = [];
+    unknown;
+    addUnknown(type) {
+        this.unknown = {
+            type,
+            value: Symbol("")
+        };
+        return this;
+    }
     addToken(type, value) {
         this.tokens.push({
             type,
@@ -104,6 +112,7 @@ class Lexer1 {
     }
     run(code, file, stack = new Stack1) {
         const result = [];
+        const { tokens , unknown  } = this;
         let c = 1;
         let l = 1;
         for(let i = 0; i < code.length; i++){
@@ -111,7 +120,7 @@ class Lexer1 {
             let next = false;
             const position = new Position1(i, c, l, file);
             const trace = new Trace1(`[Lexer]`, position);
-            for (const { type , value  } of this.tokens){
+            for (const { type , value  } of tokens){
                 const raw = code.slice(i, i + value.length);
                 if (value.length < code.length - i + 1 && value === raw) {
                     result.push(new Token1(type, value, {
@@ -123,10 +132,17 @@ class Lexer1 {
                     break;
                 }
             }
-            if (!next) throw new LexerError1(`Unexpected character CHAR(${__char} : ${__char.charCodeAt(0)})`, {
-                position,
-                stack
-            });
+            if (!next) {
+                if (unknown) result.push(new Token1(unknown.type, unknown.value, {
+                    raw: code[i],
+                    trace,
+                    stack
+                }));
+                else throw new LexerError1(`Unexpected character CHAR(${__char} : ${__char.charCodeAt(0)})`, {
+                    position,
+                    stack
+                });
+            }
             switch(__char){
                 case "\n":
                     {
@@ -559,5 +575,5 @@ export { Transformer1 as Transformer };
 export { Compiler2 as Compiler };
 export { Executer1 as Executer };
 export { Compiler1 as Interpreter };
-const version1 = "v0.5";
+const version1 = "v0.6";
 export { version1 as version };
