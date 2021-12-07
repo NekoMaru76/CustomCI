@@ -77,6 +77,7 @@ export default async function run(): Promise<any> {
       .run(ast);
   } catch (e) {
     console.log(`${e}`, e);
+    Deno.exit(1);
   }
 
   console.timeEnd(`Executer`);

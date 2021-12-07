@@ -15,21 +15,20 @@ lexer
   .addToken(`CLOSE_BRACKET`, `)`);
 
 export default function run(): Array<Token> {
-  let res: Array<Token> = [];
-
   try {
     console.time(`Lexer`);
 
-    res = lexer.run(content, file);
+    const res = lexer.run(content, file);
+
+    console.timeEnd(`Lexer`);
+
+    if (main === __filename) console.log(res);
+
+    return res;
   } catch (e) {
     console.log(`${e}`);
-  }
+    Deno.exit(1);
 
-  console.timeEnd(`Lexer`);
-
-  if (main === __filename) console.log(res);
-
-  return res;
 };
 
 if (main === __filename) run();

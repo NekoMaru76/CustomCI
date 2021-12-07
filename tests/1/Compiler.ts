@@ -23,7 +23,10 @@ parser
   .expressions
     .set(`NEW_LINE`, (arg: ParserArgument.Argument) => {
       const ast = new AST(`NewLine`, {
-        isValue: false
+        data: {
+          isValue: true,
+          body: []
+        }
       });
       const token = arg.tools.getToken();
 
@@ -36,8 +39,10 @@ parser
     .set(`OPEN_BRACKET`, (arg: ParserArgument.Argument) => {
       const { tools: { next, getToken, error, getValue, getIndex, previous, isEnd }, ast: mainAst, tokens } = arg;
       const ast = new AST(`CallExpression`, {
-        isValue: true,
-        body: []
+        data: {
+          isValue: true,
+          body: []
+        }
       });
       const name = mainAst.data.body.pop();
 
@@ -140,11 +145,18 @@ transformer
 export default async function run() {
   console.time("Compiler");
 
-  const res = compiler.run(content, file);
+  try {
+    const res = compiler.run(content, file);
 
-  await Deno.writeTextFile(`${__dirname}/Compiled.ts`, res);
+    await Deno.writeTextFile(`${__dirname}/Compiled.ts`, res);
 
-  console.timeEnd("Compiler");
+    console.timeEnd("Compiler");
+
+    return res;
+  } catch (e) {
+    console.log(`${e}`, e);
+    Deno.exit(1);
+  }
 };
 
 if (main === __filename) run();

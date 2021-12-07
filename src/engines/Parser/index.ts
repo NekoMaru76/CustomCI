@@ -17,8 +17,10 @@ export default class Parser {
         tokens, ast: mainAst
       } = arg;
       const ast = new AST(expressionType, {
-        isValue: true,
-        body: []
+        data: {
+          isValue: true,
+          body: []
+        }
       });
 
       ast.data.body.push(getToken());
@@ -55,8 +57,10 @@ export default class Parser {
         tokens, ast: mainAst
       } = arg;
       const ast = new AST(expressionType, {
-        isValue: true,
-        body: []
+        data: {
+          isValue: true,
+          body: []
+        }
       });
 
       ast.data.body.push(getToken());
@@ -120,9 +124,11 @@ export default class Parser {
   run(tokens: Array<Token>, data: any = { i: 0, stack: new Stack }): AST {
     const { expressions, plugins } = this;
     const ast = new AST(data?.type || "Main", {
-      isValue: !!(data?.type && data?.type !== "Main"),
-      body: []
-    }, []);
+      data: {
+        isValue: !!(data?.type && data?.type !== "Main"),
+        body: []
+      }
+    });
     let token;
 
     if (!data.i) data.i = 0;

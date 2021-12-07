@@ -59,22 +59,21 @@ transformer
   });
 
 export default async function run(): Promise<string> {
-  let res = '';
-
   try {
     const ast = parser();
 
     console.time(`Transformer`);
 
-    res = transformer
+    const res = transformer
       .run(ast);
+
+    console.timeEnd(`Transformer`);
+
+    return res;
   } catch (e) {
     console.log(`${e}`, e);
+    Deno.exit(1);
   }
-
-  console.timeEnd(`Transformer`);
-
-  return res;
 };
 
 if (main === __filename) run();

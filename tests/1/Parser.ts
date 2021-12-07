@@ -13,7 +13,9 @@ parser
   .expressions
     .set(`NEW_LINE`, (arg: ParserArgument.Argument) => {
       const ast = new AST(`NewLine`, {
-        isValue: false
+        data: {
+          isValue: false
+        }
       });
       const token = arg.tools.getToken();
 
@@ -26,8 +28,10 @@ parser
     .set(`OPEN_BRACKET`, (arg: ParserArgument.Argument) => {
       const { tools: { next, getToken, error, getValue, getIndex, previous, isEnd }, ast: mainAst, tokens } = arg;
       const ast = new AST(`CallExpression`, {
-        isValue: true,
-        body: []
+        data: {
+          isValue: true,
+          body: []
+        }
       });
       const name = mainAst.data.body.pop();
 
@@ -77,25 +81,27 @@ parser
     });
 
 
-export default function run(): AST {
-  let res = new AST("Temp");
+export default function run(): AST
   const lexed = lexer();
 
   try {
     console.time(`Parser`);
 
-    res = parser.run(lexed);
+    const res = parser.run(lexed);
 
     if (main === __filename) console.log(Deno.inspect(res, {
       depth: Infinity
     }));
+
+    console.timeEnd(`Parser`);
+
+    return res;
   } catch (e) {
     console.log(`${e}`, e);
+    Deno.exit(1);
   }
 
-  console.timeEnd(`Parser`);
 
-  return res;
 };
 
 if (main === __filename) run();

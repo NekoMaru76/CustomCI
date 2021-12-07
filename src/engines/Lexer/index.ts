@@ -98,7 +98,7 @@ export default class Lexer {
         const raw = code.slice(i, i+value.length);
 
         if (value.length < code.length-i+1 && value === raw) {
-          result.push(new Token(type, value, raw, trace, stack));
+          result.push(new Token(type, value, { raw, trace, stack }));
 
           next = true;
 
