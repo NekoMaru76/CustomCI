@@ -22,14 +22,13 @@ export default class Executer {
   templates: any = {
     AccessVariable(arg: ExecuterArgument.Argument) {
       const { ast } = arg;
-      const name = ast.data.body.map((token: Token) => token.value).join("");
 
-      return () => name;
+      return ast.data.body.map((token: Token) => token.value).join("");
     },
     Numbers(arg: ExecuterArgument.Argument) {
       const { ast } = arg;
 
-      return () => Number(ast.data.body.map((token: Token) => token.value).join(""));
+      return Number(ast.data.body.map((token: Token) => token.value).join(""));
     }
   };
 
@@ -134,15 +133,15 @@ export default class Executer {
           expectTypes: (ast: AST, types: Array<string> = []): any => !types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types),
           expectType: (ast: AST, type: string): any => ast.type !== type && error.expectedExpressionInsteadGot(ast, type),
           expectValue: (ast: AST): any => !ast.data.isValue && error.expectedValue(ast),
-          getValue: (filter: (Function | Array<string>) = []): AST | undefined => {
+          getValue: (filter: (Function | Array<string>) = []): Execute | undefined => {
             const _ = Array.isArray(filter) ? (exp: AST) => filter.includes(ast.type) : filter;
 
             for (const exp of result) {
-              if (exp.data.isValue && !_(exp)) return exp;
+              if (exp.ast.data.isValue && !_(exp.ast)) return exp;
             }
           }
         }
-      }))());
+      })));
     }
 
     const done: Array<Function> = [...injected.before, ...result.map(exec => exec.callback), ...injected.after];

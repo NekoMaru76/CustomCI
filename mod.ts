@@ -16,4 +16,4 @@ export { default as Executer } from "./src/engines/Executer/index.ts";
 export { default as Interpreter } from "./src/engines/Interpreter/index.ts";
 export { default as Execute } from "./src/engines/utils/Execute.ts";
 export { default as Code } from "./src/engines/utils/Code.ts";
-export const version = "v0.6";
+export const version = "v0.7";

@@ -313,15 +313,19 @@ class Parser1 {
                     ,
                     getIndex: ()=>data.i
                     ,
-                    next (ignore = []) {
+                    next (filter = []) {
+                        const _ = Array.isArray(filter) ? (token)=>filter.includes(token.type)
+                         : filter;
                         while(1){
                             tokens[++data.i] ?? error.unexpectedEndOfLine(tokens[data.i - 1]);
-                            if (!ignore.includes(tokens[data.i].type)) return tokens[data.i];
+                            if (!_(tokens[data.i])) return tokens[data.i];
                         }
                     },
-                    previous (ignore = []) {
+                    previous (filter = []) {
+                        const _ = Array.isArray(filter) ? (token)=>filter.includes(token.type)
+                         : filter;
                         while(data.i > -1){
-                            if (!ignore.includes(tokens[--data.i]?.type)) return tokens[data.i];
+                            if (!_(tokens[--data.i])) return tokens[data.i];
                         }
                     },
                     expectTypes: (token, ...types)=>!types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types)
@@ -356,6 +360,13 @@ class Parser1 {
 }
 class TransformerError extends Error {
     name = 'TransformerError';
+}
+class Code1 {
+    ast;
+    code;
+    constructor(ast, code){
+        this.ast = ast, this.code = code;
+    }
 }
 class Transformer1 {
     expressions = new Map;
@@ -401,9 +412,7 @@ class Transformer1 {
     }
     run(ast) {
         const { expressions , plugins , injected  } = this;
-        const result = [
-            ...injected.before
-        ];
+        const result = [];
         for (const exp of ast.data.body){
             const func = this.expressions.get(exp.type);
             function error(message, expression = exp) {
@@ -424,7 +433,7 @@ class Transformer1 {
             error.expectedValue = (ast = exp)=>error(`Expected value`, ast)
             ;
             if (!func) error.expressionIsNotExist();
-            result.push(func?.({
+            result.push(new Code1(exp, func?.({
                 expressions,
                 plugins,
                 ast: exp,
@@ -436,10 +445,12 @@ class Transformer1 {
                     ,
                     expectValue: (ast)=>!ast.data.isValue && error.expectedValue(ast)
                 }
-            }));
+            })));
         }
         return [
-            ...result,
+            ...injected.before,
+            ...result.map((code)=>code.code
+            ),
             ...injected.after
         ].join("");
     }
@@ -459,6 +470,13 @@ class Compiler2 {
 class ExecuterError extends Error {
     name = 'ExecuterError';
 }
+class Execute1 {
+    ast;
+    callback;
+    constructor(ast, callback){
+        this.ast = ast, this.callback = callback;
+    }
+}
 class Executer1 {
     expressions = new Map;
     plugins = new Map;
@@ -469,16 +487,13 @@ class Executer1 {
     templates = {
         AccessVariable (arg) {
             const { ast  } = arg;
-            const name = ast.data.body.map((token)=>token.value
+            return ast.data.body.map((token)=>token.value
             ).join("");
-            return ()=>name
-            ;
         },
         Numbers (arg) {
             const { ast  } = arg;
-            return ()=>Number(ast.data.body.map((token)=>token.value
-                ).join(""))
-            ;
+            return Number(ast.data.body.map((token)=>token.value
+            ).join(""));
         }
     };
     injectBefore(callback) {
@@ -505,9 +520,7 @@ class Executer1 {
     }
     async run(ast) {
         const { expressions , plugins , injected  } = this;
-        const result = [
-            ...injected.before
-        ];
+        const result = [];
         for (const exp of ast.data.body){
             const func = this.expressions.get(exp.type);
             function error(message, expression = exp) {
@@ -528,7 +541,7 @@ class Executer1 {
             error.expectedValue = (ast = exp)=>error(`Expected value`, ast)
             ;
             if (!func) error.expressionIsNotExist();
-            result.push(()=>func?.({
+            result.push(new Execute1(exp, ()=>func?.({
                     expressions,
                     plugins,
                     ast: exp,
@@ -539,13 +552,26 @@ class Executer1 {
                         expectType: (ast, type)=>ast.type !== type && error.expectedExpressionInsteadGot(ast, type)
                         ,
                         expectValue: (ast)=>!ast.data.isValue && error.expectedValue(ast)
+                        ,
+                        getValue: (filter = [])=>{
+                            const _ = Array.isArray(filter) ? (exp)=>filter.includes(ast.type)
+                             : filter;
+                            for (const exp of result){
+                                if (exp.ast.data.isValue && !_(exp.ast)) return exp;
+                            }
+                        }
                     }
-                })()
-            );
+                })
+            ));
         }
-        result.push(...injected.after);
+        const done = [
+            ...injected.before,
+            ...result.map((exec)=>exec.callback
+            ),
+            ...injected.after
+        ];
         let ret;
-        for (const cb of result)ret = await cb();
+        for (const cb of done)ret = await cb();
         return ret;
     }
 }
@@ -575,5 +601,7 @@ export { Transformer1 as Transformer };
 export { Compiler2 as Compiler };
 export { Executer1 as Executer };
 export { Compiler1 as Interpreter };
-const version1 = "v0.6";
+export { Execute1 as Execute };
+export { Code1 as Code };
+const version1 = "v0.7";
 export { version1 as version };
