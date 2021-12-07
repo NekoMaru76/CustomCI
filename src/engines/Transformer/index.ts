@@ -5,6 +5,7 @@ import Token from "../utils/Token.ts";
 import AST from "../utils/AST.ts";
 import TransformerError from "../utils/TransformerError.ts";
 import * as TransformerArgument from "../interfaces/TransformerArgument.ts";
+import Code from "../utils/Code.ts";
 
 interface Injected {
   before: Array<string>;
@@ -103,7 +104,7 @@ export default class Transformer {
     */
   run(ast: AST): string {
     const { expressions, plugins, injected } = this;
-    const result = [...injected.before];
+    const result: Array<Code> = [];
 
     for (const exp of ast.data.body) {
       const func = this.expressions.get(exp.type);
@@ -123,7 +124,7 @@ export default class Transformer {
 
       if (!func) error.expressionIsNotExist();
 
-      result.push(func?.({
+      result.push(new Code(exp, func?.({
         expressions,
         plugins,
         ast: exp,
@@ -133,9 +134,9 @@ export default class Transformer {
           expectType: (ast: AST, type: string): any => ast.type !== type && error.expectedExpressionInsteadGot(ast, type),
           expectValue: (ast: AST): any => !ast.data.isValue && error.expectedValue(ast)
         }
-      }));
+      })));
     }
 
-    return [...result, ...injected.after].join("");
+    return [...injected.before, ...result.map(code => code.code), ...injected.after].join("");
   }
 };

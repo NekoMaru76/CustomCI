@@ -34,7 +34,7 @@ export default class Lexer {
     * @param {*} value
     * @returns {Lexer}
     */
-  addToken(type: string, value: any): Lexer {
+  addToken(type: string, value: string): Lexer {
     this.tokens.push({ type, value });
 
     return this;

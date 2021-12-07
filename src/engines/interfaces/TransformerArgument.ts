@@ -15,7 +15,8 @@ export interface Tools {
   expectTypes: Function,
   error: Error,
   expectType: Function,
-  expectValue: Function
+  expectValue: Function,
+  getValue: Function
 };
 export interface Argument {
   tools: Tools,

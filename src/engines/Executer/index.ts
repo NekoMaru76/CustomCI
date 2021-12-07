@@ -5,6 +5,7 @@ import Token from "../utils/Token.ts";
 import AST from "../utils/AST.ts";
 import ExecuterError from "../utils/ExecuterError.ts";
 import * as ExecuterArgument from "../interfaces/ExecuterArgument.ts";
+import Execute from "../utils/Execute.ts";
 
 interface Injected {
   before: Array<Function>;
@@ -104,7 +105,7 @@ export default class Executer {
     */
   async run(ast: AST): Promise<any> {
     const { expressions, plugins, injected } = this;
-    const result: Array<Function> = [...injected.before];
+    const result: Array<Execute> = [];
 
     for (const exp of ast.data.body) {
       const func = this.expressions.get(exp.type);
@@ -124,7 +125,7 @@ export default class Executer {
 
       if (!func) error.expressionIsNotExist();
 
-      result.push(() => func?.({
+      result.push(new Execute(exp, () => func?.({
         expressions,
         plugins,
         ast: exp,
@@ -132,16 +133,23 @@ export default class Executer {
           error,
           expectTypes: (ast: AST, types: Array<string> = []): any => !types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types),
           expectType: (ast: AST, type: string): any => ast.type !== type && error.expectedExpressionInsteadGot(ast, type),
-          expectValue: (ast: AST): any => !ast.data.isValue && error.expectedValue(ast)
+          expectValue: (ast: AST): any => !ast.data.isValue && error.expectedValue(ast),
+          getValue: (filter: (Function | Array<string>) = []): AST | undefined => {
+            const _ = Array.isArray(filter) ? (exp: AST) => filter.includes(ast.type) : filter;
+
+            for (const exp of result) {
+              if (exp.data.isValue && !_(exp)) return exp;
+            }
+          }
         }
-      })());
+      }))());
     }
 
-    result.push(...injected.after);
+    const done: Array<Function> = [...injected.before, ...result.map(exec => exec.callback), ...injected.after];
 
     let ret;
 
-    for (const cb of result)
+    for (const cb of done)
       ret = await cb();
 
     return ret;

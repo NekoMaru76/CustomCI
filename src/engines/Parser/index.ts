@@ -202,16 +202,20 @@ export default class Parser {
           isEnd: (): Boolean => tokens.length <= data.i+1,
           getToken: (ind: number = data.i): Token | undefined => tokens[ind],
           getIndex: (): number => data.i,
-          next(ignore: Array<string> = []): Token | undefined {
+          next(filter: (Array<string> | Function) = []): Token | undefined {
+            const _ = Array.isArray(filter) ? (token: Token) => filter.includes(token.type) : filter;
+
             while (1) {
               tokens[++data.i] ?? error.unexpectedEndOfLine(tokens[data.i-1] as Token);
 
-              if (!ignore.includes(tokens[data.i].type)) return tokens[data.i];
+              if (!_(tokens[data.i])) return tokens[data.i];
             }
           },
-          previous(ignore: Array<string> = []): Token | undefined {
+          previous(filter: (Array<string> | Function) = []): Token | undefined {
+            const _ = Array.isArray(filter) ? (token: Token) => filter.includes(token.type) : filter;
+
             while (data.i > -1) {
-              if (!ignore.includes(tokens[--data.i]?.type)) return tokens[data.i];
+              if (!_(tokens[--data.i])) return tokens[data.i];
             }
           },
           expectTypes: (token: Token, ...types: Array<string>): any => !types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types),
