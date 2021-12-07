@@ -1,4 +1,4 @@
-import { Compiler, AST, Token } from "../../mod.ts";
+import { Compiler, AST, Token, Execute } from "../../mod.ts";
 import * as ParserArgument from "../../src/engines/interfaces/ParserArgument.ts";
 import * as TransformerArgument from "../../src/engines/interfaces/TransformerArgument.ts";
 

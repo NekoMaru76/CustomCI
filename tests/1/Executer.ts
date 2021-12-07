@@ -19,7 +19,7 @@ executer
   .addNumbers()
   .injectBefore(() => window.sum = (...args: number[]) => args.reduce((a: number, b: number) => a+b))
   .injectBefore(() => window.sub = (...args: number[]) => args.reduce((a: number, b: number) => a-b))
-  .addExpression("NewLine", () => () => {})
+  .addExpression("NewLine", () => null)
   .addExpression("CallExpression", (arg: ExecuterArgument.Argument) => {
     const {
       tools: {
@@ -39,7 +39,7 @@ executer
       plugins,
       expressions,
       ast: ast.data.body[0].name
-    })();
+    });
 
     switch (name) {
       case "log": {
@@ -59,10 +59,10 @@ executer
         plugins,
         expressions,
         ast: value
-      })();
+      });
     });
 
-    return () => eval(`${name}(${values.join(",")})`);
+    return eval(`${name}(${values.join(",")})`);
   });
 
 export default async function run(): Promise<any> {

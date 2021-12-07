@@ -28,7 +28,7 @@ export default function run(): Array<Token> {
   } catch (e) {
     console.log(`${e}`);
     Deno.exit(1);
-
+  }
 };
 
 if (main === __filename) run();

@@ -81,7 +81,7 @@ parser
     });
 
 
-export default function run(): AST
+export default function run(): AST {
   const lexed = lexer();
 
   try {
@@ -100,8 +100,6 @@ export default function run(): AST
     console.log(`${e}`, e);
     Deno.exit(1);
   }
-
-
 };
 
 if (main === __filename) run();
