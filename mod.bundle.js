@@ -180,7 +180,7 @@ class Parser1 {
                 let nextToken = ast.data.body[0];
                 while(!isEnd()){
                     try {
-                        expectTypes(getToken(getIndex() + 1), tokenTypes);
+                        expectTypes(getToken(getIndex() + 1), ...tokenTypes);
                         nextToken = next();
                         ast.data.body.push(nextToken);
                         ast.raw.push(...nextToken.raw);
@@ -207,7 +207,7 @@ class Parser1 {
                 let nextToken = ast.data.body[0];
                 while(!isEnd()){
                     try {
-                        expectTypes(getToken(getIndex() + 1), tokenTypes);
+                        expectTypes(getToken(getIndex() + 1), ...tokenTypes);
                         nextToken = next();
                         ast.data.body.push(nextToken);
                     } catch  {
@@ -226,6 +226,14 @@ class Parser1 {
     }
     addNumbers(expressionType = "NumberLiteral", tokenTypes) {
         this.expressions.set(`NUMBER`, this.templates.Numbers(expressionType, tokenTypes));
+        return this;
+    }
+    addOneTypeExpressions(tokenType, ...expressionCallbacks) {
+        for (const expressionCallback of expressionCallbacks)this.expressions.set(tokenType, expressionCallback);
+        return this;
+    }
+    addExpression(tokenType, expressionCallback) {
+        this.expressions.set(tokenType, expressionCallback);
         return this;
     }
     run(tokens, data = {
@@ -300,7 +308,7 @@ class Parser1 {
                             if (!ignore.includes(tokens[--data.i]?.type)) return tokens[data.i];
                         }
                     },
-                    expectTypes: (token, types = [])=>!types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types)
+                    expectTypes: (token, ...types)=>!types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types)
                     ,
                     expectType: (token, type)=>token.type !== type && error.expectedTokenInsteadGot(token, type)
                     ,
@@ -551,5 +559,5 @@ export { Transformer1 as Transformer };
 export { Compiler2 as Compiler };
 export { Executer1 as Executer };
 export { Compiler1 as Interpreter };
-const version1 = "v0.4";
+const version1 = "v0.5";
 export { version1 as version };

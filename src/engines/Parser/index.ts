@@ -34,7 +34,7 @@ export default class Parser {
 
       while (!isEnd()) {
         try {
-          expectTypes(getToken(getIndex()+1), tokenTypes);
+          expectTypes(getToken(getIndex()+1), ...tokenTypes);
 
           nextToken = next();
 
@@ -73,7 +73,7 @@ export default class Parser {
 
       while (!isEnd()) {
         try {
-          expectTypes(getToken(getIndex()+1), tokenTypes);
+          expectTypes(getToken(getIndex()+1), ...tokenTypes);
 
           nextToken = next();
 
@@ -111,6 +111,30 @@ export default class Parser {
     */
   addNumbers(expressionType: string = "NumberLiteral", tokenTypes: Array<string>): Parser {
     this.expressions.set(`NUMBER`, this.templates.Numbers(expressionType, tokenTypes));
+
+    return this;
+  }
+
+  /**
+    * Adds multiple expressions
+    * @param {string} tokenType
+    * @param {Array<Function>} expressionCallbacks
+    * @returns {Parser}
+    */
+  addOneTypeExpressions(tokenType: string, ...expressionCallbacks: Function[]): Parser {
+    for (const expressionCallback of expressionCallbacks) this.expressions.set(tokenType, expressionCallback);
+
+    return this;
+  }
+
+  /**
+    * Adds an expression
+    * @param {string} tokenType
+    * @param {Function} expressionCallback
+    * @returns {Parser}
+    */
+  addExpression(tokenType: string, expressionCallback: Function): Parser {
+    this.expressions.set(tokenType, expressionCallback);
 
     return this;
   }
@@ -190,7 +214,7 @@ export default class Parser {
               if (!ignore.includes(tokens[--data.i]?.type)) return tokens[data.i];
             }
           },
-          expectTypes: (token: Token, types: Array<string> = []): any => !types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types),
+          expectTypes: (token: Token, ...types: Array<string>): any => !types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types),
           expectType: (token: Token, type: string): any => token.type !== type && error.expectedTokenInsteadGot(token, type),
           getValue: (end: any): AST => {
             const clone = { ...data };
