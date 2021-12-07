@@ -106,7 +106,7 @@ export default class Lexer {
         }
       }
 
-      if (!next) throw new LexerError(`Unexpected character CHAR(${char} : ${char.charCodeAt(0)})`, position, stack);
+      if (!next) throw new LexerError(`Unexpected character CHAR(${char} : ${char.charCodeAt(0)})`, { position, stack });
 
       switch (char) {
         case "\n": {

@@ -108,15 +108,18 @@ export default class Transformer {
     for (const exp of ast.data.body) {
       const func = this.expressions.get(exp.type);
 
-      function error(message: string, position: Position = exp.position, stack: Stack = exp.stack): never {
-        throw new TransformerError(message, position, stack);
+      function error(message: string, expression: AST = exp): never {
+        throw new TransformerError(message, {
+          position: exp.position,
+          stack: exp.stack
+        });
       }
 
-      error.unexpectedExpression = (ast: AST = exp): never => error(`Unexpected expression EXPRESSION(${ast.type})`, ast.position, ast.stack);
-      error.expectedOneOfTheseExpressionsInsteadGot = (ast: AST = exp, expected: Array<string>): never => error(`Expected one of these expressions: LIST(${expected.map(type => `EXPRESSION(${type})`).join(" : ")}), instead got EXPRESSION(${ast.type})`, ast.position, ast.stack);
-      error.expectedExpressionInsteadGot = (ast: AST = exp, expected: string): never => error(`Expected expression EXPRESSION(${expected}), instead got EXPRESSION(${ast.type})`, ast.position, ast.stack);
-      error.expressionIsNotExist = (ast: AST = exp): never => error(`Expression EXPRESSION(${ast.type}) is not exist`, ast.position, ast.stack);
-      error.expectedValue = (ast: AST = exp): never => error(`Expected value`, ast.position, ast.stack);
+      error.unexpectedExpression = (ast: AST = exp): never => error(`Unexpected expression EXPRESSION(${ast.type})`, ast);
+      error.expectedOneOfTheseExpressionsInsteadGot = (ast: AST = exp, expected: Array<string>): never => error(`Expected one of these expressions: LIST(${expected.map(type => `EXPRESSION(${type})`).join(" : ")}), instead got EXPRESSION(${ast.type})`, ast);
+      error.expectedExpressionInsteadGot = (ast: AST = exp, expected: string): never => error(`Expected expression EXPRESSION(${expected}), instead got EXPRESSION(${ast.type})`, ast);
+      error.expressionIsNotExist = (ast: AST = exp): never => error(`Expression EXPRESSION(${ast.type}) is not exist`, ast);
+      error.expectedValue = (ast: AST = exp): never => error(`Expected value`, ast);
 
       if (!func) error.expressionIsNotExist();
 

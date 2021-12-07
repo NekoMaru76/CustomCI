@@ -9,7 +9,7 @@ export interface Error {
   expectedExpressionInsteadGot: Function,
   expressionIsNotExist: Function,
   expectedValue: Function,
-  (message: string, position: Position, stack: Stack): Function
+  (message: string, expression: AST): Function
 };
 export interface Tools {
   expectTypes: Function,

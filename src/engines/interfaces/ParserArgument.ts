@@ -9,7 +9,7 @@ export interface Error {
   expectedTokenInsteadGot: Function,
   unexpectedEndOfLine: Function,
   expressionIsNotExist: Function,
-  (message: string, position: Position, stack: Stack): Function
+  (message: string, token: Token): Function
 };
 export interface Tools {
   next: Function,

@@ -126,7 +126,7 @@ transformer
       }
       case "sum":
       case "sub": break;
-      default: error(`FUNC(${name}) is not a valid function name`, ast.data.body[0].name.trace, ast.data.body[0].name.stack);
+      default: error(`FUNC(${name}) is not a valid function name`, ast.data.body[0].name);
     }
 
     const values = ast.data.body[0].values.map((value: AST) => {

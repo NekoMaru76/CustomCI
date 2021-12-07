@@ -146,15 +146,18 @@ export default class Parser {
       }
       if (data.i >= tokens.length-1) ast.end = token.position;
 
-      function error(message: string, position: Position = tokens[data.i].position, stack: Stack = tokens[data.i].stack): never {
-        throw new ParserError(message, position, stack);
+      function error(message: string, token: Token = tokens[data.i]): never {
+        throw new ParserError(message, {
+          position: token.position,
+          stack: token.stack
+        });
       }
 
-      error.unexpectedToken = (token: Token = tokens[data.i]): never => error(`Unexpected token TOKEN(${token.type})`, token.position, token.stack);
-      error.expectedOneOfTheseTokensInsteadGot = (token: Token = tokens[data.i], expected: Array<string>): never => error(`Expected one of these tokens: LIST(${expected.map(type => `TOKEN(${type})`).join(" : ")}), instead got TOKEN(${token.type})`, token.position, token.stack);
-      error.expectedTokenInsteadGot = (token: Token = tokens[data.i], expected: string): never => error(`Expected token TOKEN(${expected}), instead got TOKEN(${token.type})`, token.position, token.stack);
-      error.unexpectedEndOfLine = (token: Token = tokens[data.i]): never => error(`Unexpected end of line`, token.position, token.stack);
-      error.expressionIsNotExist = (token: Token = tokens[data.i]): never => error(`Expression for TOKEN(${token.type}) is not exist`, token.position, token.stack);
+      error.unexpectedToken = (token: Token = tokens[data.i]): never => error(`Unexpected token TOKEN(${token.type})`, token);
+      error.expectedOneOfTheseTokensInsteadGot = (token: Token = tokens[data.i], expected: Array<string>): never => error(`Expected one of these tokens: LIST(${expected.map(type => `TOKEN(${type})`).join(" : ")}), instead got TOKEN(${token.type})`, token);
+      error.expectedTokenInsteadGot = (token: Token = tokens[data.i], expected: string): never => error(`Expected token TOKEN(${expected}), instead got TOKEN(${token.type})`, token);
+      error.unexpectedEndOfLine = (token: Token = tokens[data.i]): never => error(`Unexpected end of line`, token);
+      error.expressionIsNotExist = (token: Token = tokens[data.i]): never => error(`Expression for TOKEN(${token.type}) is not exist`, token);
       ast.end = token.position;
 
       switch (data?.type) {
