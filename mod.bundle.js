@@ -551,5 +551,5 @@ export { Transformer1 as Transformer };
 export { Compiler2 as Compiler };
 export { Executer1 as Executer };
 export { Compiler1 as Interpreter };
-const version1 = "v0.3";
+const version1 = "v0.4";
 export { version1 as version };
