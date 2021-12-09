@@ -2,8 +2,9 @@ import Stack from "../utils/Stack.ts";
 import Position from "../utils/Position.ts";
 import Trace from "../utils/Trace.ts";
 import Token from "../utils/Token.ts";
-import LexerError from "../utils/LexerError.ts";
-import LexerToken from "../interfaces/LexerToken.ts";
+import LexerError from "../utils/Error/Lexer.ts";
+import LexerToken from "../interfaces/Lexer/Token.ts";
+import LexerOperator from "../interfaces/Lexer/Operator.ts";
 
 interface Unknown {
   type: string;
@@ -13,6 +14,7 @@ interface Unknown {
 export default class Lexer {
   tokens: Array<LexerToken> = [];
   unknown: (Unknown | any);
+  operators: Array<LexerOperator> = [];
 
   /**
     * Adds unique symbol

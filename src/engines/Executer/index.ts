@@ -3,8 +3,8 @@ import Position from "../utils/Position.ts";
 import Trace from "../utils/Trace.ts";
 import Token from "../utils/Token.ts";
 import AST from "../utils/AST.ts";
-import ExecuterError from "../utils/ExecuterError.ts";
-import * as ExecuterArgument from "../interfaces/ExecuterArgument.ts";
+import ExecuterError from "../utils/Error/Executer.ts";
+import * as ExecuterArgument from "../interfaces/Executer/Argument.ts";
 import Execute from "../utils/Execute.ts";
 
 interface Injected {

@@ -1,6 +1,6 @@
 import { Transformer, AST, Token } from "../../mod.ts";
 import parser from "./Parser.ts";
-import * as TransformerArgument from "../../src/engines/interfaces/TransformerArgument.ts";
+import * as TransformerArgument from "../../src/engines/interfaces/Transformer/Argument.ts";
 
 const __filename = new URL('', import.meta.url).pathname;
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -58,7 +58,7 @@ transformer
     return `${name}(${values.join(",")})`;
   });
 
-export default async function run(): Promise<string> {
+export default async function run(): Promise<string> | never {
   try {
     const ast = parser();
 
@@ -68,6 +68,8 @@ export default async function run(): Promise<string> {
       .run(ast);
 
     console.timeEnd(`Transformer`);
+
+    if (main === __filename) await Deno.writeTextFile(`${__dirname}/Compiled.ts`, res);
 
     return res;
   } catch (e) {

@@ -14,7 +14,7 @@ lexer
   .addToken(`OPEN_BRACKET`, `(`)
   .addToken(`CLOSE_BRACKET`, `)`);
 
-export default function run(): Array<Token> {
+export default function run(): Array<Token> | never {
   try {
     console.time(`Lexer`);
 

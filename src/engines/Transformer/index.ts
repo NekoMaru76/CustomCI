@@ -3,8 +3,8 @@ import Position from "../utils/Position.ts";
 import Trace from "../utils/Trace.ts";
 import Token from "../utils/Token.ts";
 import AST from "../utils/AST.ts";
-import TransformerError from "../utils/TransformerError.ts";
-import * as TransformerArgument from "../interfaces/TransformerArgument.ts";
+import TransformerError from "../utils/Error/Transformer.ts";
+import * as TransformerArgument from "../interfaces/Transformer/Argument.ts";
 import Code from "../utils/Code.ts";
 
 interface Injected {

@@ -1,5 +1,5 @@
 import { Parser, AST, Token } from "../../mod.ts";
-import * as ParserArgument from "../../src/engines/interfaces/ParserArgument.ts";
+import * as ParserArgument from "../../src/engines/interfaces/Parser/Argument.ts";
 import lexer from "./Lexer.ts";
 
 const __filename = new URL('', import.meta.url).pathname;
@@ -81,7 +81,7 @@ parser
     });
 
 
-export default function run(): AST {
+export default function run(): AST | never {
   const lexed = lexer();
 
   try {

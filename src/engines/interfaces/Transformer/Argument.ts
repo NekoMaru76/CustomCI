@@ -1,7 +1,7 @@
-import AST from "../utils/AST.ts";
-import Token from "../utils/Token.ts";
-import Stack from "../utils/Stack.ts";
-import Position from "../utils/Position.ts";
+import AST from "../../utils/AST.ts";
+import Token from "../../utils/Token.ts";
+import Stack from "../../utils/Stack.ts";
+import Position from "../../utils/Position.ts";
 
 export interface Error {
   unexpectedExpression: Function,

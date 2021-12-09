@@ -1,6 +1,6 @@
 import { Executer, AST, Token } from "../../mod.ts";
 import parser from "./Parser.ts";
-import * as ExecuterArgument from "../../src/engines/interfaces/ExecuterArgument.ts";
+import * as ExecuterArgument from "../../src/engines/interfaces/Executer/Argument.ts";
 
 const __filename = new URL('', import.meta.url).pathname;
 const __dirname = new URL('.', import.meta.url).pathname;

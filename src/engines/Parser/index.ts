@@ -1,9 +1,9 @@
 import AST from "../utils/AST.ts";
-import ParserError from "../utils/ParserError.ts";
+import ParserError from "../utils/Error/Parser.ts";
 import Token from "../utils/Token.ts";
 import Position from "../utils/Position.ts";
 import Stack from "../utils/Stack.ts";
-import { Argument } from "../interfaces/ParserArgument.ts";
+import { Argument } from "../interfaces/Parser/Argument.ts";
 
 export default class Parser {
   expressions: Map<string, Function> = new Map;

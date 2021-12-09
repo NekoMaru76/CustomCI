@@ -1,6 +1,6 @@
 import { Compiler, AST, Token, Execute } from "../../mod.ts";
-import * as ParserArgument from "../../src/engines/interfaces/ParserArgument.ts";
-import * as TransformerArgument from "../../src/engines/interfaces/TransformerArgument.ts";
+import * as ParserArgument from "../../src/engines/interfaces/Parser/Argument.ts";
+import * as TransformerArgument from "../../src/engines/interfaces/Transformer/Argument.ts";
 
 const __filename = new URL('', import.meta.url).pathname;
 const __dirname = new URL('.', import.meta.url).pathname;

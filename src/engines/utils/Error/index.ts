@@ -1,10 +1,6 @@
-import Position from "./Position.ts";
-import Stack from "./Stack.ts";
-
-interface Options {
-  position: Position;
-  stack: Stack;
-};
+import Options from "../../interfaces/Error/Options.ts";
+import Position from "../../utils/Position.ts";
+import Stack from "../../utils/Stack.ts";
 
 export default class Error {
   name: string = `Error`;
