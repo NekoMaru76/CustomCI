@@ -22,14 +22,14 @@ export default class Transformer {
   templates: any = {
     AccessVariable(arg: TransformerArgument.Argument) {
       const { ast } = arg;
-      const name = ast.data.body.map((token: Token) => token.value).join("");
+      const name = ast.body.map((token: Token) => token.value).join("");
 
       return name;
     },
     Numbers(arg: TransformerArgument.Argument) {
       const { ast } = arg;
 
-      return Number(ast.data.body.map((token: Token) => token.value).join(""));
+      return Number(ast.body.map((token: Token) => token.value).join(""));
     }
   };
 
@@ -102,24 +102,25 @@ export default class Transformer {
     * @param {AST} ast
     * @returns {string}
     */
-  run(ast: AST): string {
+  async run(ast: AST): Promise<string> {
     const { expressions, plugins, injected } = this;
     const result: Array<Code> = [];
 
-    for (const exp of ast.data.body) {
+    for (const exp of ast.body) {
       const func = this.expressions.get(exp.type);
 
       function error(message: string, expression: AST = exp): never {
         throw new TransformerError(message, {
           position: exp.position,
-          stack: exp.stack
+          stack: exp.stack,
+          raw: exp.raw.join("")
         });
       }
 
-      error.unexpectedExpression = (ast: AST = exp): never => error(`Unexpected expression EXPRESSION(${ast.type})`, ast);
-      error.expectedOneOfTheseExpressionsInsteadGot = (ast: AST = exp, expected: Array<string>): never => error(`Expected one of these expressions: LIST(${expected.map(type => `EXPRESSION(${type})`).join(" : ")}), instead got EXPRESSION(${ast.type})`, ast);
-      error.expectedExpressionInsteadGot = (ast: AST = exp, expected: string): never => error(`Expected expression EXPRESSION(${expected}), instead got EXPRESSION(${ast.type})`, ast);
-      error.expressionIsNotExist = (ast: AST = exp): never => error(`Expression EXPRESSION(${ast.type}) is not exist`, ast);
+      error.unexpectedExpression = (ast: AST = exp): never => error(`Unexpected expression ${ast.type}`, ast);
+      error.expectedOneOfTheseExpressionsInsteadGot = (ast: AST = exp, expected: Array<string>): never => error(`Expected one of these expressions: (${expected.join(" : ")}), instead got EXPRESSION(${ast.type})`, ast);
+      error.expectedExpressionInsteadGot = (ast: AST = exp, expected: string): never => error(`Expected expression ${expected}, instead got ${ast.type}`, ast);
+      error.expressionIsNotExist = (ast: AST = exp): never => error(`Expression ${ast.type} is not exist`, ast);
       error.expectedValue = (ast: AST = exp): never => error(`Expected value`, ast);
 
       if (!func) error.expressionIsNotExist();
@@ -132,7 +133,7 @@ export default class Transformer {
           error,
           expectTypes: (ast: AST, types: Array<string> = []): any => !types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types),
           expectType: (ast: AST, type: string): any => ast.type !== type && error.expectedExpressionInsteadGot(ast, type),
-          expectValue: (ast: AST): any => !ast.data.isValue && error.expectedValue(ast)
+          expectValue: (ast: AST): any => !ast.isValue && error.expectedValue(ast)
         }
       })));
     }

@@ -9,6 +9,6 @@ export default class Trace {
     this.position = position;
   }
   toString() {
-    return `POSITION(${this.position}) NAME(${this.name})`;
+    return `${this.name} ${this.position}`;
   }
 };

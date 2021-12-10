@@ -23,7 +23,7 @@ export default class Stack {
   toString() {
     return this.traces.map(trace => `\tat ${trace}`).join("\n");
   }
-  static combine(limit: number, ...stacks: (Stack | any)[]) {
+  static combine(limit: number, stacks: Stack[]) {
     const stack = new Stack(limit);
 
     for (const st of stacks) if (st instanceof Stack) stack.traces.push(...st.traces);

@@ -11,6 +11,6 @@ export default class Position {
     this.line = line;
   }
   toString() {
-    return `FILE(${this.file}) : INDEX(${this.index}) : COLUMN(${this.column}) : LINE(${this.line})`;
+    return `${this.file} : ${this.index} : ${this.column} : ${this.line}`;
   }
 };

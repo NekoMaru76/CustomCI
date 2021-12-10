@@ -17,10 +17,10 @@ export default class Compiler {
     * @param {Stack} stack
     * @returns {*}
     */
-  run(code: string, file: string, stack: Stack = new Stack): any {
+  async run(code: string, file: string, stack: Stack = new Stack): Promise<any> {
     const { lexer, parser, executer } = this;
     const lexed = lexer.run(code, file, stack);
-    const ast = parser.run(lexed);
+    const ast = await parser.run(lexed);
     const result = executer.run(ast);
 
     return result;

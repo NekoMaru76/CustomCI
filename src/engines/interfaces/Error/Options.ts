@@ -1,7 +1,9 @@
-import Position from "../../utils/Position.ts";
+import Trace from "../../utils/Trace.ts";
 import Stack from "../../utils/Stack.ts";
 
 export default interface Options {
-  position: Position;
+  start: Trace;
+  end: Trace;
   stack: Stack;
+  raw: string;
 };

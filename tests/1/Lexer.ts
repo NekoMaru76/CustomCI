@@ -8,11 +8,16 @@ const file = `${__dirname}/Raw.nt`;
 const content = await Deno.readTextFile(file);
 
 lexer
-  .addNumbers()
-  .addAlphabets()
+  .addNumbers("NUMBERS", [], ["_"])
+  .addAlphabets("IDENTIFIERS", ["_"], ["_0123456789"])
   .addWhitespaces()
-  .addToken(`OPEN_BRACKET`, `(`)
-  .addToken(`CLOSE_BRACKET`, `)`);
+  .addSub()
+  .addSum()
+  .addDiv()
+  .addMul()
+  .addSymbols()
+  .addToken(`OPEN_BRACKET`, [`(`])
+  .addToken(`CLOSE_BRACKET`, [`)`]);
 
 export default function run(): Array<Token> | never {
   try {

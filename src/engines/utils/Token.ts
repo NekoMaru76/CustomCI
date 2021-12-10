@@ -3,28 +3,25 @@ import Stack from "./Stack.ts";
 import Position from "./Position.ts";
 
 interface Options {
-  raw: string;
-  trace: Trace,
+  start: Trace;
+  end: Trace;
   stack: Stack;
 };
 
 export default class Token {
-  type: string;
+  type: (string | symbol);
   value: string;
-  raw: string;
-  trace: Trace;
+  end: Trace;
+  start: Trace;
   stack: Stack;
 
-  constructor(type: string, value: string, {
-    raw, stack, trace
+  constructor(type: string | symbol, value: string, {
+    stack, start, end
   }: Options) {
     this.type = type,
     this.value = value,
-    this.raw = raw,
-    this.trace = trace,
+    this.end = end,
+    this.start = start,
     this.stack = stack;
-  }
-  get position() {
-    return this.trace.position;
   }
 };

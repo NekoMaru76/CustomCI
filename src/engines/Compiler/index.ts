@@ -18,10 +18,10 @@ export default class Compiler {
     * @returns {string} Compiled code
     */
 
-  run(code: string, file: string, stack: Stack = new Stack): string {
+  async run(code: string, file: string, stack: Stack = new Stack): Promise<string> {
     const { lexer, parser, transformer } = this;
     const lexed = lexer.run(code, file, stack);
-    const ast = parser.run(lexed);
+    const ast = await parser.run(lexed);
     const compiled = transformer.run(ast);
 
     return compiled;

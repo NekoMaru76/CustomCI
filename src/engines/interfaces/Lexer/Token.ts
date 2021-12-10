@@ -1,4 +1,5 @@
 export default interface Token {
   type: string;
-  value: string;
+  startValues: string[];
+  values: string[];
 };

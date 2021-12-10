@@ -10,70 +10,58 @@ const parser = new Parser;
 parser
   .addNumbers("NumberLiteral", ["NUMBER", "UNDER_SCORE"])
   .addAccessVariables("AccessVariable", ["ALPHABET", "UNDER_SCORE"])
+  .addSum()
+  .addSub()
+  .addDiv()
+  .addMul()
   .expressions
     .set(`NEW_LINE`, (arg: ParserArgument.Argument) => {
-      const ast = new AST(`NewLine`, {
-        data: {
-          isValue: false
-        }
-      });
       const token = arg.tools.getToken();
-
-      ast.start = ast.end = token.position;
-      ast.stack = token.stack;
-      ast.trace = token.trace;
+      const ast = new AST(`NewLine`, {
+        isValue: false,
+        body: [token],
+        stack: token.stack,
+        end: token.end,
+        start: token.start,
+        raw: [token.value]
+      });
 
       return ast;
     })
-    .set(`OPEN_BRACKET`, (arg: ParserArgument.Argument) => {
-      const { tools: { next, getToken, error, getValue, getIndex, previous, isEnd }, ast: mainAst, tokens } = arg;
-      const ast = new AST(`CallExpression`, {
-        data: {
-          isValue: true,
-          body: []
-        }
-      });
-      const name = mainAst.data.body.pop();
+    .set(`OPEN_BRACKET`, async (arg: ParserArgument.Argument) => {
+      const { tools: { next, getToken, error, getValue, getIndex, isEnd, expectTypes }, ast: mainAst, tokens } = arg;
 
-      !name && error.unexpectedEndOfLine(getToken());
-      name.type !== "AccessVariable" && error.unexpectedToken(getToken());
+      if (isEnd()) error.unexpectedEndOfLine(getToken());
+
+      const token = getToken();
+      const ast = new AST(`CallExpression`, {
+        isValue: true,
+        body: [],
+        start: token.start,
+        stack: token.stack,
+        end: token.end,
+        raw: [token.raw]
+      });
+      const name = mainAst.body.pop();
+
+      !name && error.unexpectedEndOfLine(token);
+      name.type !== "AccessVariable" && error.unexpectedToken(token);
 
       const values: Array<Token> = [];
-      let nextToken = next();
 
-      ast.start = ast.end = nextToken?.position;
-      ast.stack = nextToken?.stack;
-      ast.trace = nextToken?.trace;
+      if (getToken(getIndex()+1)?.type !== "CLOSE_BRACKET") while (getToken()?.type !== "CLOSE_BRACKET") {
+        next();
 
-      while (nextToken?.type !== "CLOSE_BRACKET") {
-        switch (getToken(getIndex()+1)?.type) {
-          case undefined: error.unexpectedEndOfLine(getToken(getIndex()-2));
-          default: {
-            values.push(getValue(["CLOSE_BRACKET", `SPACE`]));
+        const value = await getValue(["CLOSE_BRACKET", "SPACE"]);
 
-            if (getToken()?.type === "CLOSE_BRACKET") {
-                previous();
+        ast.end = getToken()?.position || ast.end || ast.start;
 
-                break;
-            }
-
-            {
-              const nextToken = getToken(getIndex()+1);
-
-              switch (nextToken?.type) {
-                case undefined: error.unexpectedEndOfLine(getToken(getIndex()-1));
-                case "SPACE":
-                case "NEW_LINE": error.unexpectedToken(nextToken);
-              }
-            }
-          }
-        }
-
-        ast.end = nextToken?.position;
-        nextToken = next();
+        ast.raw.push(...value.raw);
+        expectTypes(getToken(), ["CLOSE_BRACKET", "SPACE"]);
+        values.push(value);
       }
 
-      ast.data.body.push({
+      ast.body.push({
         name, values
       });
 
@@ -81,13 +69,13 @@ parser
     });
 
 
-export default function run(): AST | never {
+export default async function run(): Promise<(AST | never)> {
   const lexed = lexer();
 
   try {
     console.time(`Parser`);
 
-    const res = parser.run(lexed);
+    const res = await parser.run(lexed);
 
     if (main === __filename) console.log(Deno.inspect(res, {
       depth: Infinity

@@ -32,13 +32,13 @@ executer
       expressions
     } = arg;
 
-    expectType(ast.data.body[0].name, "AccessVariable");
+    expectType(ast.body[0].name, "AccessVariable");
 
     let name: string = executer.expressions.get("AccessVariable")?.({
       tools: arg.tools,
       plugins,
       expressions,
-      ast: ast.data.body[0].name
+      ast: ast.body[0].name
     });
 
     switch (name) {
@@ -48,11 +48,13 @@ executer
         break;
       }
       case "sum":
-      case "sub": break;
-      default: error(`FUNC(${name}) is not a valid function name`, ast.data.body[0].name);
+      case "sub":
+      case "mul":
+      case "div": break;
+      default: error(`FUNC(${name}) is not a valid function name`, ast.body[0].name);
     }
 
-    const values = ast.data.body[0].values.map((value: AST) => {
+    const values = ast.body[0].values.map((value: AST) => {
       expectValue(value);
       return executer.expressions.get(value.type)?.({
         tools: arg.tools,
@@ -69,7 +71,7 @@ export default async function run(): Promise<any> {
   let res;
 
   try {
-    const ast = parser();
+    const ast = await parser();
 
     console.time(`Executer`);
 

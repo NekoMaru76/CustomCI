@@ -1,3 +1,5 @@
-import Token from "./Token.ts";
-
-export default interface Operator extends Token {};
+export default interface Operator {
+  level: number;
+  type: string;
+  value: string;
+};
