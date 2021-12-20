@@ -1,4 +1,4 @@
-import { Executer, AST, Token } from "../../mod.ts";
+import { Expression, Executer, AST, Token } from "../../mod.ts";
 import parser from "./Parser.ts";
 import * as ExecuterArgument from "../../src/engines/interfaces/Executer/Argument.ts";
 
@@ -15,31 +15,25 @@ declare global {
 };
 
 executer
-  .addAccessVariable()
-  .addNumbers()
   .injectBefore(() => window.sum = (...args: number[]) => args.reduce((a: number, b: number) => a+b))
   .injectBefore(() => window.sub = (...args: number[]) => args.reduce((a: number, b: number) => a-b))
   .addExpression("NewLine", () => null)
+  .addExpression("Identifiers", (arg: ExecuterArgument.Argument) => {
+    return arg.expression.tree.token.value;
+  })
+  .addExpression("Numbers", (arg: ExecuterArgument.Argument) => {
+    return Number(arg.expression.tree.token.value.replaceAll("_", ""));
+  })
   .addExpression("CallExpression", (arg: ExecuterArgument.Argument) => {
     const {
-      tools: {
-        expectType,
-        expectValue,
-        error
-      },
+      tools,
       ast,
       plugins,
-      expressions
+      expressions,
+      expression
     } = arg;
 
-    expectType(ast.body[0].name, "AccessVariable");
-
-    let name: string = executer.expressions.get("AccessVariable")?.({
-      tools: arg.tools,
-      plugins,
-      expressions,
-      ast: ast.body[0].name
-    });
+    let name = expression.tree.token.value;
 
     switch (name) {
       case "log": {
@@ -51,16 +45,18 @@ executer
       case "sub":
       case "mul":
       case "div": break;
-      default: error(`FUNC(${name}) is not a valid function name`, ast.body[0].name);
+      default: tools.error(`${name} is not a valid function name`, expression);
     }
 
-    const values = ast.body[0].values.map((value: AST) => {
-      expectValue(value);
+    const values = expression.list.map((value: Expression) => {
+      tools.expectValue(value);
       return executer.expressions.get(value.type)?.({
-        tools: arg.tools,
+        tools,
         plugins,
         expressions,
-        ast: value
+        ast,
+        expression: value,
+        previousExpression: expression
       });
     });
 

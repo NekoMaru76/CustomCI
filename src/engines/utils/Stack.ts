@@ -21,7 +21,7 @@ export default class Stack {
     });
   }
   toString() {
-    return this.traces.map(trace => `\tat ${trace}`).join("\n");
+    return this.traces.map(trace => `\tat ${trace.toString()}`).join("\n");
   }
   static combine(limit: number, stacks: Stack[]) {
     const stack = new Stack(limit);

@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-import Error from "./src/engines/utils/Error/index.ts";
+import Error from "./src/engines/utils/Error/Base.ts";
 import LexerError from "./src/engines/utils/Error/Lexer.ts";
 import ParserError from "./src/engines/utils/Error/Parser.ts";
 import ExecuterError from "./src/engines/utils/Error/Executer.ts";
@@ -14,18 +14,17 @@ Object.assign({
   Transformer: TransformerError
 }, Error);
 
+export * as TokenParser from "./src/engines/utils/Parser/index.ts";
 export { Error };
+export { default as Expression } from "./src/engines/utils/Expression.ts";
+export * as Tree from "./src/engines/utils/Tree/index.ts";
 export { default as Lexer } from "./src/engines/Lexer/index.ts";
-//export { default as Parser } from "./src/engines/Parser/index.ts";
+export { default as Parser } from "./src/engines/Parser/index.ts";
 export { default as AST } from "./src/engines/utils/AST.ts";
 export { default as Position } from "./src/engines/utils/Position.ts";
 export { default as Stack } from "./src/engines/utils/Stack.ts";
 export { default as Token } from "./src/engines/utils/Token.ts";
 export { default as Trace } from "./src/engines/utils/Trace.ts";
-//export { default as Transformer } from "./src/engines/Transformer/index.ts";
-//export { default as Compiler } from "./src/engines/Compiler/index.ts";
-//export { default as Executer } from "./src/engines/Executer/index.ts";
-//export { default as Interpreter } from "./src/engines/Interpreter/index.ts";
-//export { default as Execute } from "./src/engines/utils/Execute.ts";
-//export { default as Code } from "./src/engines/utils/Code.ts";
-export const version = "v1.0";
+export { default as Transformer } from "./src/engines/Transformer/index.ts";
+export { default as Executer } from "./src/engines/Executer/index.ts";
+export const version = "v2.0";

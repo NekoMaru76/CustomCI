@@ -2,7 +2,7 @@ import Options from "../../interfaces/Error/Options.ts";
 import Trace from "../../utils/Trace.ts";
 import Stack from "../../utils/Stack.ts";
 
-export default class Error {
+export default class Base {
   name: string = `Error`;
   message: string;
   start: Trace;
@@ -18,6 +18,6 @@ export default class Error {
     this.stack = options.stack;
   }
   toString() {
-    return `Start: ${this.start}\nEnd: ${this.end}\n${this.name}: ${this.message}\nRaw: ${this.raw}\n${this.stack}\n`;
+    return `Start: ${this.start.toString()}\nEnd: ${this.end.toString()}\n${this.name}: ${this.message}\nRaw: ${this.raw}\n${this.stack.toString()}\n`;
   }
 };

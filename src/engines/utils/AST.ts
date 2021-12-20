@@ -1,26 +1,26 @@
 import Position from "./Position.ts";
-import Trace from "./Trace.ts";
 import Stack from "./Stack.ts";
 import Token from "./Token.ts";
+import Expression from "./Expression.ts";
 
 interface Options {
-  raw: Array<string>;
-  start: Trace;
-  end: Trace;
+  raw?: Array<string>;
+  start: Token;
+  end?: Token;
   stack?: Stack;
   data?: any;
-  body: Array<any>;
-  isValue: Boolean;
+  body?: Array<Expression>;
+  isValue?: Boolean;
 }
 
 export default class AST {
   type: string;
   raw: Array<string>;
-  start: Trace;
-  end: Trace;
+  start: Token;
+  end: Token;
   stack: Stack;
-  data?: any;
-  body: Array<any>;
+  data: any;
+  body: Array<Expression>;
   isValue: Boolean;
 
   constructor(type: string, options: Options) {
@@ -29,8 +29,8 @@ export default class AST {
     this.stack = options.stack || new Stack,
     this.start = options.start,
     this.end = options.end || this.start,
-    this.body = options.body,
-    this.isValue = options.isValue,
+    this.body = options.body || [],
+    this.isValue = options.isValue || false,
     this.raw = options.raw || [];
   }
 };

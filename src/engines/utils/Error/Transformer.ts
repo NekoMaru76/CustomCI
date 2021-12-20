@@ -1,5 +1,5 @@
-import Error from "./index.ts";
+import Base from "./Base.ts";
 
-export default class TransformerError extends Error {
+export default class TransformerError extends Base {
   name = 'TransformerError';
 };

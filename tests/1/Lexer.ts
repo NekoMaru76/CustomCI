@@ -8,16 +8,51 @@ const file = `${__dirname}/Raw.nt`;
 const content = await Deno.readTextFile(file);
 
 lexer
-  .addNumbers("NUMBERS", [], ["_"])
-  .addAlphabets("IDENTIFIERS", ["_"], ["_0123456789"])
-  .addWhitespaces()
-  .addSub()
-  .addSum()
-  .addDiv()
-  .addMul()
-  .addSymbols()
-  .addToken(`OPEN_BRACKET`, [`(`])
-  .addToken(`CLOSE_BRACKET`, [`)`]);
+  .addToken({
+    type: "IDENTIFIERS",
+    startValues: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split(""),
+    values: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789".split(""),
+    mustSkip: false,
+    canCollide: true,
+    isContinuous: true
+  })
+  .addToken({
+    type: "NUMBERS",
+    startValues: "0123456789".split(""),
+    values: "0123456789_".split(""),
+    mustSkip: false,
+    canCollide: true,
+    isContinuous: true
+  })
+  .addToken({
+    type: "NEW_LINE",
+    startValues: ["\n"],
+    values: ["\n"],
+    mustSkip: true,
+    canCollide: true,
+    isContinuous: true
+  })
+  .addToken({
+    type: "SPACE",
+    startValues: [" "],
+    mustSkip: false,
+    canCollide: false,
+    isContinuous: false
+  })
+  .addToken({
+    type: "OPEN_BRACKET",
+    startValues: ["("],
+    mustSkip: false,
+    canCollide: false,
+    isContinuous: false
+  })
+  .addToken({
+    type: "CLOSE_BRACKET",
+    startValues: [")"],
+    mustSkip: false,
+    canCollide: false,
+    isContinuous: false
+  });
 
 export default function run(): Array<Token> | never {
   try {

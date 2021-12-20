@@ -1,4 +1,4 @@
-import { Parser, AST, Token } from "../../mod.ts";
+import { Parser, AST, Token, TokenParser, Expression, Tree } from "../../mod.ts";
 import * as ParserArgument from "../../src/engines/interfaces/Parser/Argument.ts";
 import lexer from "./Lexer.ts";
 
@@ -8,66 +8,68 @@ const main = new URL("", Deno.mainModule).pathname;
 const parser = new Parser;
 
 parser
-  .addNumbers("NumberLiteral", ["NUMBER", "UNDER_SCORE"])
-  .addAccessVariables("AccessVariable", ["ALPHABET", "UNDER_SCORE"])
-  .addSum()
-  .addSub()
-  .addDiv()
-  .addMul()
-  .expressions
-    .set(`NEW_LINE`, (arg: ParserArgument.Argument) => {
-      const token = arg.tools.getToken();
-      const ast = new AST(`NewLine`, {
-        isValue: false,
-        body: [token],
-        stack: token.stack,
-        end: token.end,
-        start: token.start,
-        raw: [token.value]
-      });
+  .addExpression("SPACE", {
+    isValue: false,
+    isList: false,
+    name: "Space",
+    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
+      tools.error.unexpectedToken(expression.tree.start);
 
-      return ast;
-    })
-    .set(`OPEN_BRACKET`, async (arg: ParserArgument.Argument) => {
-      const { tools: { next, getToken, error, getValue, getIndex, isEnd, expectTypes }, ast: mainAst, tokens } = arg;
+      return expression;
+    }
+  })
+  .addExpression("OPEN_BRACKET", {
+    isValue: true,
+    isList: false,
+    name: "CallExpression",
+    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
+      tools.error.unexpectedToken(expression.tree.token);
 
-      if (isEnd()) error.unexpectedEndOfLine(getToken());
+      return expression;
+    }
+  })
+  .addExpression("IDENTIFIERS", {
+    isValue: true,
+    isList: true,
+    name: "CallExpression",
+    isEnd: (token: Token) => token.type === "CLOSE_BRACKET",
+    list: [
+      new TokenParser.Type(() => {}, "OPEN_BRACKET"),
+      new TokenParser.Rest(async ({ expression, ast, tools, data }: ParserArgument.RestParserTokenArgument) => {
+        const tree = expression.tree as Tree.TokenList;
+        const v = await tools.getValue(tree);
 
-      const token = getToken();
-      const ast = new AST(`CallExpression`, {
-        isValue: true,
-        body: [],
-        start: token.start,
-        stack: token.stack,
-        end: token.end,
-        raw: [token.raw]
-      });
-      const name = mainAst.body.pop();
+        data.i = v.data.i;
 
-      !name && error.unexpectedEndOfLine(token);
-      name.type !== "AccessVariable" && error.unexpectedToken(token);
+        tools.expectValue(v.ast.body[0]);
+        tools.push(v.ast.body[0]);
+        expression.raw.push(...v.ast.body[0].raw);
 
-      const values: Array<Token> = [];
+        if (tools.isEnd()) return tools.end();
 
-      if (getToken(getIndex()+1)?.type !== "CLOSE_BRACKET") while (getToken()?.type !== "CLOSE_BRACKET") {
-        next();
+        tools.next();
 
-        const value = await getValue(["CLOSE_BRACKET", "SPACE"]);
+        const space = tools.getTree().token;
 
-        ast.end = getToken()?.position || ast.end || ast.start;
+        expression.raw.push(space.value);
+        tools.expectType(space, "SPACE");
+        tools.next();
+      })
+    ],
+    callback({ expression, ast, tools }: ParserArgument.ParserTokenCallbackArgument): Expression {
+      expression.raw.splice(1, 0, "(");
 
-        ast.raw.push(...value.raw);
-        expectTypes(getToken(), ["CLOSE_BRACKET", "SPACE"]);
-        values.push(value);
-      }
-
-      ast.body.push({
-        name, values
-      });
-
-      return ast;
-    });
-
+      return expression;
+    }
+  })
+  .addExpression("NUMBERS", {
+    isValue: true,
+    name: "Numbers",
+    isList: false,
+    callback({ expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
+      return expression;
+    }
+  });
 
 export default async function run(): Promise<(AST | never)> {
   const lexed = lexer();
@@ -77,11 +79,14 @@ export default async function run(): Promise<(AST | never)> {
 
     const res = await parser.run(lexed);
 
-    if (main === __filename) console.log(Deno.inspect(res, {
-      depth: Infinity
-    }));
-
     console.timeEnd(`Parser`);
+
+    if (main === __filename) {
+      /*console.log(Deno.inspect(res, {
+        depth: Infinity
+      }));*/
+      console.log(res);
+    }
 
     return res;
   } catch (e) {

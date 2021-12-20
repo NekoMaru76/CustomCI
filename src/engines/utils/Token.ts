@@ -9,19 +9,19 @@ interface Options {
 };
 
 export default class Token {
-  type: (string | symbol);
+  type: string | symbol;
   value: string;
-  end: Trace;
   start: Trace;
+  end: Trace;
   stack: Stack;
 
   constructor(type: string | symbol, value: string, {
     stack, start, end
   }: Options) {
-    this.type = type,
-    this.value = value,
-    this.end = end,
-    this.start = start,
+    this.type = type;
+    this.value = value;
+    this.end = end;
+    this.start = start;
     this.stack = stack;
   }
 };

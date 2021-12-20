@@ -1,11 +1,19 @@
 import AST from "../../utils/AST.ts";
-import Token from "../../utils/Token.ts";
 import Stack from "../../utils/Stack.ts";
 import Position from "../../utils/Position.ts";
+import Expression from "../../utils/Expression.ts";
+import * as IExpression from "./Expression.ts";
+import IOperator from "./Operator.ts";
+import * as Tree from "../../utils/Tree/index.ts";
+import Token from "../../utils/Token.ts";
 
+export interface GetValue {
+  ast: AST;
+  data: any;
+};
 export interface ExpectedValue {
-  ast: Function,
-  token: Function;
+  ast: AST,
+  token: Token;
 };
 export interface Error {
   unexpectedToken: Function,
@@ -16,7 +24,7 @@ export interface Error {
   expressionIsNotExist: Function,
   operatorIsNotExist: Function,
   expectedValue: ExpectedValue,
-  (message: string, token: Token): Function;
+  (message: string, token: Token): never;
 };
 export interface Tools {
   next: Function,
@@ -27,15 +35,40 @@ export interface Tools {
   isEnd: Function,
   expectType: Function,
   getValue: Function,
-  getOperator: Function,
   expectValue: Function,
-  getToken: Function;
+  getTree: Function;
 };
 export interface Argument {
   tools: Tools,
   tokens: Array<Token>,
   data: any,
-  plugins: Map<string, any>,
-  expressions: Map<string, Function>,
+  plugins: Map<string | symbol, any>,
+  expressions: Map<string | symbol, Function>,
   ast: AST;
 };
+export interface ParseTokensArgument {
+  expressions: Map<string | symbol | symbol, IExpression.TreeExpression>,
+  plugins: Map<string | symbol | symbol, any>,
+  operators: Map<string | symbol | symbol, IOperator>,
+  data: any,
+  tree: Tree.TokenLessList;
+};
+export interface ParserTokenTools extends Tools {
+  push: Function;
+};
+export interface RestParserTokenTools extends ParserTokenTools {
+  end: Function;
+};
+export interface ParserTokenCallbackArgument extends Argument {
+  expression: Expression;
+};
+export interface ParserTokenArgument extends ParserTokenCallbackArgument {
+  tools: ParserTokenTools;
+};
+export interface RestParserTokenArgument extends ParserTokenCallbackArgument {
+  tools: RestParserTokenTools;
+};
+export interface RestParserTokenCallbackArgument extends RestParserTokenArgument {
+  tree: Tree.TokenListLess | Tree.TokenList;
+};
+export interface ValueParserTokenCallbackArgument extends ParserTokenArgument, GetValue {};

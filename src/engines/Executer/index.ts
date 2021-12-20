@@ -4,8 +4,9 @@ import Trace from "../utils/Trace.ts";
 import Token from "../utils/Token.ts";
 import AST from "../utils/AST.ts";
 import ExecuterError from "../utils/Error/Executer.ts";
+import * as Tree from "../utils/Tree/index.ts";
 import * as ExecuterArgument from "../interfaces/Executer/Argument.ts";
-import Execute from "../utils/Execute.ts";
+import Expression from "../utils/Expression.ts";
 
 interface Injected {
   before: Array<Function>;
@@ -13,23 +14,11 @@ interface Injected {
 };
 
 export default class Executer {
-  expressions: Map<string, Function> = new Map;
-  plugins: Map<string, any> = new Map;
+  expressions: Map<string | symbol, Function> = new Map;
+  plugins: Map<string | symbol, any> = new Map;
   injected: Injected = {
     before: [],
     after: []
-  };
-  templates: any = {
-    AccessVariable(arg: ExecuterArgument.Argument) {
-      const { ast } = arg;
-
-      return ast.body.map((token: Token) => token.value).join("");
-    },
-    Numbers(arg: ExecuterArgument.Argument) {
-      const { ast } = arg;
-
-      return Number(ast.body.map((token: Token) => token.value).join(""));
-    }
   };
 
   /**
@@ -56,11 +45,11 @@ export default class Executer {
 
   /**
     * Adds an expression
-    * @param {string} name
+    * @param {string | symbol} name
     * @param {Function} expression
     * @returns {Executer}
     */
-  addExpression(name: string, expression: Function): Executer {
+  addExpression(name: string | symbol, expression: Function): Executer {
     this.expressions.set(name, expression);
 
     return this;
@@ -68,33 +57,14 @@ export default class Executer {
 
   /**
     * Adds multiple expressions
-    * @param {string} name
+    * @param {string | symbol} name
     * @param {Array<Function>} expressions
     * @returns {Executer}
     */
-  addExpressions(name: string, ...expressions: Array<Function>): Executer {
+  addExpressions(name: string | symbol, ...expressions: Array<Function>): Executer {
     for (const expression of expressions) this.expressions.set(name, expression);
 
     return this;
-  }
-
-
-  /**
-    * Adds access variable expression template
-    * @param {string} [name=AccessVariable]
-    * @returns {Executer}
-    */
-  addAccessVariable(name: string = "AccessVariable"): Executer {
-    return this.addExpression(name, this.templates.AccessVariable);
-  }
-
-  /**
-    * Adds numbers expression template
-    * @param {string} [name=NumberLiteral]
-    * @returns {Executer}
-    */
-  addNumbers(name: string = "NumberLiteral"): Executer {
-    return this.addExpression(name, this.templates.Numbers);
   }
 
   /**
@@ -104,53 +74,44 @@ export default class Executer {
     */
   async run(ast: AST): Promise<any> {
     const { expressions, plugins, injected } = this;
-    const result: Array<Execute> = [];
-
-    for (const exp of ast.body) {
-      const func = this.expressions.get(exp.type);
-
-      function error(message: string, expression: AST = exp): never {
-        throw new ExecuterError(message, {
-          position: exp.position,
-          stack: exp.stack,
-          raw: exp.raw.join("")
-        });
-      }
-
-      error.unexpectedExpression = (ast: AST = exp): never => error(`Unexpected expression ${ast.type}`, ast);
-      error.expectedOneOfTheseExpressionsInsteadGot = (ast: AST = exp, expected: Array<string>): never => error(`Expected one of these expressions: (${expected.join(" : ")}), instead got EXPRESSION(${ast.type})`, ast);
-      error.expectedExpressionInsteadGot = (ast: AST = exp, expected: string): never => error(`Expected expression ${expected}, instead got ${ast.type}`, ast);
-      error.expressionIsNotExist = (ast: AST = exp): never => error(`Expression ${ast.type} is not exist`, ast);
-      error.expectedValue = (ast: AST = exp): never => error(`Expected value`, ast);
-
-      if (!func) error.expressionIsNotExist();
-
-      result.push(new Execute(exp, () => func?.({
-        expressions,
-        plugins,
-        ast: exp,
-        tools: {
-          error,
-          expectTypes: (ast: AST, types: Array<string> = []): any => !types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types),
-          expectType: (ast: AST, type: string): any => ast.type !== type && error.expectedExpressionInsteadGot(ast, type),
-          expectValue: (ast: AST): any => !ast.isValue && error.expectedValue(ast),
-          getValue: (filter: (Function | Array<string>) = []): Execute | undefined => {
-            const _ = Array.isArray(filter) ? (exp: AST) => filter.includes(ast.type) : filter;
-
-            for (const exp of result) {
-              if (exp.ast.isValue && !_(exp.ast)) return exp;
-            }
-          }
-        }
-      })));
-    }
-
-    const done: Array<Function> = [...injected.before, ...result.map(exec => exec.callback), ...injected.after];
 
     let ret;
 
-    for (const cb of done)
-      ret = await cb();
+    for (const cb of injected.before) ret = await cb();
+    for (const expression of ast.body) {
+      const func = this.expressions.get(expression.type);
+
+      function error(message: string, expression: Expression): never {
+        throw new ExecuterError(message, {
+          start: expression.tree.start.start,
+          end: expression.tree.end.end,
+          stack: expression.tree.stack,
+          raw: expression.raw.join("")
+        });
+      }
+
+      error.unexpectedExpression = (expression: Expression): never => error(`Unexpected expression ${String(expression.type)}`, expression);
+      error.expectedOneOfTheseExpressionsInsteadGot = (expression: Expression, expected: Array<string | symbol>): never => error(`Expected one of these expressions: (${expected.map(String).join(", ")}), instead got ${String(expression.type)}`, expression);
+      error.expectedExpressionInsteadGot = (expression: Expression, expected: string | symbol): never => error(`Expected expression ${String(expected)}, instead got ${String(expression.type)}`, expression);
+      error.expressionIsNotExist = (expression: Expression): never => error(`Expression ${String(expression.type)} is not exist`, expression);
+      error.expectedValue = (expression: Expression): never => error(`Expected value`, expression);
+
+      if (!func) error.expressionIsNotExist(expression);
+
+      ret = await func?.({
+        expressions,
+        plugins,
+        ast,
+        expression,
+        tools: {
+          error,
+          expectTypes: (expression: Expression, types: (string | symbol)[] = []): any => !types.includes(expression.type) && error.expectedOneOfTheseExpressionsInsteadGot(expression, types),
+          expectType: (expression: Expression, type: string | symbol): any => expression.type !== type && error.expectedExpressionInsteadGot(expression, type),
+          expectValue: (expression: Expression): any => !expression.tree.isValue && error.expectedValue(expression)
+        }
+      });
+    }
+    for (const cb of injected.after) ret = await cb();
 
     return ret;
   }

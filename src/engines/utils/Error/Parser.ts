@@ -1,5 +1,5 @@
-import Error from "./index.ts";
+import Base from "./Base.ts";
 
-export default class ParserError extends Error {
+export default class ParserError extends Base {
   name = 'ParserError';
 };
