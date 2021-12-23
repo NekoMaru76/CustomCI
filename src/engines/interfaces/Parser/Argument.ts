@@ -61,6 +61,7 @@ export interface RestParserTokenTools extends ParserTokenTools {
 };
 export interface ParserTokenCallbackArgument extends Argument {
   expression: Expression;
+  tools: ParserTokenTools
 };
 export interface ParserTokenArgument extends ParserTokenCallbackArgument {
   tools: ParserTokenTools;

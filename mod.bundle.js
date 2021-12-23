@@ -542,7 +542,14 @@ async function parseTree(arg) {
                         }
                     }
                     expression.raw.push(tree.end.value);
-                    ast.body.push(await f.callback(baseArg));
+                    const copy = {
+                        ...baseArg
+                    };
+                    copy.tools = {
+                        ...copy.tools
+                    };
+                    copy.tools.push = ast.body.push.bind(ast.body);
+                    await f.callback(copy);
                     break;
                 }
             case tr instanceof TokenLessListTree:
@@ -566,8 +573,14 @@ async function parseTree(arg) {
                         list: [],
                         expression
                     };
-                    expression.raw.push(tree.token.value);
-                    ast.body.push(await f.callback(baseArg));
+                    const copy = {
+                        ...baseArg
+                    };
+                    copy.tools = {
+                        ...copy.tools
+                    };
+                    copy.tools.push = ast.body.push.bind(ast.body);
+                    await f.callback(copy);
                     break;
                 }
         }

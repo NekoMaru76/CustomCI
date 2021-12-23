@@ -126,7 +126,13 @@ export default async function parseTree(arg: IArgument.ParseTokensArgument): Pro
         }
 
         expression.raw.push(tree.end.value);
-        ast.body.push(await f.callback(baseArg));
+
+        const copy = { ...baseArg } as any;
+
+        copy.tools = { ...copy.tools };
+        copy.tools.push = ast.body.push.bind(ast.body);
+
+        await f.callback(copy);
 
         break;
       }
@@ -150,8 +156,12 @@ export default async function parseTree(arg: IArgument.ParseTokensArgument): Pro
           expression
         };
 
-        expression.raw.push(tree.token.value);
-        ast.body.push(await f.callback(baseArg));
+        const copy = { ...baseArg } as any;
+
+        copy.tools = { ...copy.tools };
+        copy.tools.push = ast.body.push.bind(ast.body);
+
+        await f.callback(copy);
 
         break;
       }

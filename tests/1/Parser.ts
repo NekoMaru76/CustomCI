@@ -12,20 +12,16 @@ parser
     isValue: false,
     isList: false,
     name: "Space",
-    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
+    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument) {
       tools.error.unexpectedToken(expression.tree.start);
-
-      return expression;
     }
   })
   .addExpression("OPEN_BRACKET", {
     isValue: true,
     isList: false,
     name: "CallExpression",
-    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
+    callback({ tools, expression }: ParserArgument.ParserTokenCallbackArgument) {
       tools.error.unexpectedToken(expression.tree.token);
-
-      return expression;
     }
   })
   .addExpression("IDENTIFIERS", {
@@ -56,18 +52,17 @@ parser
         tools.next();
       })
     ],
-    callback({ expression, ast, tools }: ParserArgument.ParserTokenCallbackArgument): Expression {
+    callback({ expression, ast, tools }: ParserArgument.ParserTokenCallbackArgument) {
       expression.raw.splice(1, 0, "(");
-
-      return expression;
+      tools.push(expression);
     }
   })
   .addExpression("NUMBERS", {
     isValue: true,
     name: "Numbers",
     isList: false,
-    callback({ expression }: ParserArgument.ParserTokenCallbackArgument): Expression {
-      return expression;
+    callback({ expression, tools }: ParserArgument.ParserTokenCallbackArgument) {
+      return tools.push(expression);
     }
   });
 
