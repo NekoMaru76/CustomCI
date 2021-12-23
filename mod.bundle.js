@@ -1,4 +1,129 @@
-class Stack1 {
+class Base {
+    name = `Error`;
+    message;
+    start;
+    end;
+    stack;
+    raw;
+    constructor(message, options){
+        this.message = message, this.start = options.start, this.end = options.end, this.raw = options.raw, this.stack = options.stack;
+    }
+    toString() {
+        return `Start: ${this.start.toString()}\nEnd: ${this.end.toString()}\n${this.name}: ${this.message}\nRaw: ${this.raw}\n${this.stack.toString()}\n`;
+    }
+}
+class LexerError extends Base {
+    name = 'LexerError';
+}
+class ParserError extends Base {
+    name = 'ParserError';
+}
+class ExecuterError extends Base {
+    name = 'ExecuterError';
+}
+class TransformerError extends Base {
+    name = 'TransformerError';
+}
+class Base1 {
+}
+class Rest extends Base1 {
+    tokens = [];
+    callback;
+    constructor(callback){
+        super();
+        this.callback = callback;
+    }
+}
+class Value extends Base1 {
+    callback;
+    constructor(callback){
+        super();
+        this.callback = callback;
+    }
+}
+class Operator extends Value {
+    before = [];
+    after = [];
+    constructor(callback){
+        super(callback);
+    }
+}
+class Custom extends Base1 {
+    callback;
+    constructor(callback){
+        super();
+        this.callback = callback;
+    }
+}
+class Type extends Base1 {
+    type;
+    callback;
+    constructor(callback, type){
+        super();
+        this.type = type;
+        this.callback = callback;
+    }
+}
+const mod = {
+    Base: Base1,
+    Rest: Rest,
+    Value: Value,
+    Operator: Operator,
+    Custom: Custom,
+    Type: Type
+};
+class Expression {
+    list = [];
+    raw = [];
+    tree;
+    type;
+    constructor(type, tree){
+        this.tree = tree;
+        this.type = type;
+    }
+}
+class Base2 {
+    start;
+    end;
+    isValue;
+    stack;
+    constructor(stack, start, end, isValue = false){
+        this.start = start;
+        this.end = end;
+        this.stack = stack;
+        this.isValue = isValue;
+    }
+}
+class TokenLessListTree extends Base2 {
+    list;
+    constructor(stack, start, end = start, isValue = false, list = []){
+        super(stack, start, end, isValue);
+        this.list = list;
+    }
+}
+class TokenListTree extends Base2 {
+    list;
+    token;
+    constructor(stack, start, end = start, isValue = false, token, list = []){
+        super(stack, start, end, isValue);
+        this.token = token;
+        this.list = list;
+    }
+}
+class TokenListLessTree extends Base2 {
+    token;
+    constructor(stack, start, end = start, isValue = false, token){
+        super(stack, start, end, isValue);
+        this.token = token;
+    }
+}
+const mod1 = {
+    Base: Base2,
+    TokenLessList: TokenLessListTree,
+    TokenList: TokenListTree,
+    TokenListLess: TokenListLessTree
+};
+class Stack {
     limit;
     traces;
     constructor(limit = 10){
@@ -14,16 +139,16 @@ class Stack1 {
         });
     }
     toString() {
-        return this.traces.map((trace)=>`\tat ${trace}`
+        return this.traces.map((trace)=>`\tat ${trace.toString()}`
         ).join("\n");
     }
-    static combine(limit, ...stacks) {
-        const stack = new Stack1(limit);
-        for (const st of stacks)if (st instanceof Stack1) stack.traces.push(...st.traces);
+    static combine(limit, stacks) {
+        const stack = new Stack(limit);
+        for (const st of stacks)if (st instanceof Stack) stack.traces.push(...st.traces);
         return stack;
     }
 }
-class Position1 {
+class Position {
     index;
     column;
     file;
@@ -32,361 +157,470 @@ class Position1 {
         this.index = index, this.column = column, this.file = file, this.line = line;
     }
     toString() {
-        return `FILE(${this.file}) : INDEX(${this.index}) : COLUMN(${this.column}) : LINE(${this.line})`;
+        return `${this.file} : ${this.index} : ${this.column} : ${this.line}`;
     }
 }
-class Trace1 {
+class Trace {
     name;
     position;
     constructor(name, position){
         this.name = name, this.position = position;
     }
     toString() {
-        return `POSITION(${this.position}) NAME(${this.name})`;
+        return `${this.name} ${this.position.toString()}`;
     }
 }
-class Token1 {
+class Token {
     type;
     value;
-    raw;
-    trace;
+    start;
+    end;
     stack;
-    constructor(type, value, { raw , stack , trace  }){
-        this.type = type, this.value = value, this.raw = raw, this.trace = trace, this.stack = stack;
-    }
-    get position() {
-        return this.trace.position;
-    }
-}
-class Error {
-    name = `Error`;
-    message;
-    position;
-    stack;
-    constructor(message, options){
-        this.message = message, this.position = options.position, this.stack = options.stack;
-    }
-    toString() {
-        return `POSITION(${this.position})\n\nNAME(${this.name}): MESSAGE(${this.message})\nSTACK(\n${this.stack}\n)`;
+    constructor(type, value, { stack , start , end  }){
+        this.type = type;
+        this.value = value;
+        this.end = end;
+        this.start = start;
+        this.stack = stack;
     }
 }
-class LexerError1 extends Error {
-    name = 'LexerError';
-}
-class Lexer1 {
+class Lexer {
     tokens = [];
-    unknown;
-    addUnknown(type) {
-        this.unknown = {
-            type,
-            value: Symbol("")
-        };
+    operators = [];
+    unknown = Symbol("UNKNOWN");
+    addToken(arg) {
+        this.tokens.push(arg);
         return this;
     }
-    addToken(type, value) {
-        this.tokens.push({
-            type,
-            value
-        });
+    addOperator(arg) {
+        this.operators.push(arg);
         return this;
     }
-    addOneTypeTokens(type, ...tokens) {
-        for (const token of tokens)this.addToken(type, token);
-        return this;
-    }
-    addAlphabets() {
-        this.addOneTypeTokens(`ALPHABET`, ...`ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`);
-        return this;
-    }
-    addWhitespaces() {
-        this.addToken(`NEW_LINE`, `\n`).addToken(`SPACE`, ` `);
-        return this;
-    }
-    addSymbols() {
-        this.addToken(`UNDER_SCORE`, `_`);
-        return this;
-    }
-    addNumbers() {
-        this.addOneTypeTokens(`NUMBER`, ...`0123456789.`);
-        return this;
-    }
-    run(code, file, stack = new Stack1) {
+    run(code, file, stack = new Stack) {
         const result = [];
-        const { tokens , unknown  } = this;
+        const { tokens , unknown , operators  } = this;
+        const operatorsList = operators.sort((a, b)=>b.value.length - a.value.length
+        );
+        let tokensList = [];
         let c = 1;
         let l = 1;
-        for(let i = 0; i < code.length; i++){
+        let bef;
+        let befCanCollide = false;
+        for (const token of tokens){
+            const t = token.isContinuous ? token : token;
+            for (const startValue of token.startValues){
+                const o = {
+                    ...t,
+                    startValue
+                };
+                delete o.startValues;
+                tokensList.push(o);
+            }
+        }
+        tokensList = tokensList.sort((a, b)=>b.startValue.length - a.startValue.length
+        );
+        let i = 0;
+        function counter(string) {
+            for (const __char of string){
+                if (__char === "\n") {
+                    l++;
+                    c = 1;
+                } else {
+                    c++;
+                }
+            }
+            i++;
+        }
+        for(; i < code.length;){
             const __char = code[i];
             let next = false;
-            const position = new Position1(i, c, l, file);
-            const trace = new Trace1(`[Lexer]`, position);
-            for (const { type , value  } of tokens){
-                const raw = code.slice(i, i + value.length);
-                if (value.length < code.length - i + 1 && value === raw) {
-                    result.push(new Token1(type, value, {
-                        raw,
-                        trace,
-                        stack
-                    }));
+            const posStart = new Position(i, c, l, file);
+            const traceStart = new Trace(`[Lexer]`, posStart);
+            const currentStack = new Stack(stack.limit);
+            currentStack.traces.push(traceStart);
+            for (const tokenList of tokensList){
+                const { type , startValue , mustSkip , canCollide , isContinuous  } = tokenList;
+                const raw = code.slice(i, i + startValue.length);
+                if (startValue === raw) {
+                    counter(raw);
+                    const vs = [
+                        raw
+                    ];
+                    if (isContinuous) {
+                        const { values  } = tokenList;
+                        let stop = false;
+                        while(!stop){
+                            stop = true;
+                            for (const value of values){
+                                const raw = code.slice(i, i + value.length);
+                                if (raw !== value) continue;
+                                counter(raw);
+                                vs.push(raw);
+                                stop = false;
+                                break;
+                            }
+                        }
+                    }
+                    const posEnd = new Position(i - 1, c - 1, l, file);
+                    const traceEnd = new Trace(`[Lexer]`, posEnd);
+                    if (!mustSkip) {
+                        const token = new Token(type, vs.join(""), {
+                            start: traceStart,
+                            end: traceEnd,
+                            stack: currentStack
+                        });
+                        if (!bef || !befCanCollide || !canCollide || [
+                            bef?.type,
+                            token.type
+                        ].includes(unknown) || bef?.type !== token.type) result.push(token);
+                        else {
+                            bef.end = token.end;
+                            bef.value += token.value;
+                        }
+                        bef = token;
+                        befCanCollide = canCollide;
+                    }
                     next = true;
                     break;
                 }
             }
             if (!next) {
-                if (unknown) result.push(new Token1(unknown.type, unknown.value, {
-                    raw: code[i],
-                    trace,
-                    stack
-                }));
-                else throw new LexerError1(`Unexpected character CHAR(${__char} : ${__char.charCodeAt(0)})`, {
-                    position,
-                    stack
-                });
-            }
-            switch(__char){
-                case "\n":
-                    {
-                        l++;
-                        c = 1;
+                for (const { type , value , level  } of operatorsList){
+                    const raw = code.slice(i, i + value.length);
+                    if (value === raw) {
+                        counter(raw);
+                        const posEnd = new Position(i, c, l, file);
+                        const traceEnd = new Trace(`[Lexer]`, posEnd);
+                        result.push(new Token(type, raw, {
+                            start: traceStart,
+                            end: traceEnd,
+                            stack: currentStack
+                        }));
+                        next = true;
                         break;
                     }
-                default:
+                }
+                if (!next) {
+                    result.push(new Token(unknown, __char, {
+                        start: traceStart,
+                        end: traceStart,
+                        stack: currentStack
+                    }));
+                    i++;
                     c++;
+                }
             }
         }
         return result;
     }
 }
-class AST1 {
+async function parseTokens(token, tokens, expressions, data, error) {
+    const f = expressions.get(token.type);
+    switch(true){
+        case !f:
+            error.expressionIsNotExist(token);
+        case f?.isList:
+            {
+                const exp = f;
+                const list = [];
+                while(1){
+                    const token = tokens[++data.i];
+                    if (!token) error.unexpectedEndOfLine(tokens[data.i - 1]);
+                    if (await exp.isEnd(token)) break;
+                    list.push(await parseTokens(token, tokens, expressions, data, error));
+                }
+                return new TokenListTree(data.stack, token, tokens[data.i], exp.isValue, token, list);
+            }
+        default:
+            return new TokenListLessTree(data.stack, token, token, f?.isValue, token);
+    }
+}
+class AST {
     type;
-    data;
     raw;
     start;
     end;
-    trace;
     stack;
+    data;
+    body;
+    isValue;
     constructor(type, options){
-        this.type = type, this.data = options?.data || {
-        }, this.end = options?.end, this.start = options?.start, this.trace = options?.trace, this.stack = options?.stack || new Stack1, this.raw = options?.raw || [];
-    }
-    get position() {
-        return this.trace?.position;
+        this.type = type, this.data = options.data || {
+        }, this.stack = options.stack || new Stack, this.start = options.start, this.end = options.end || this.start, this.body = options.body || [], this.isValue = options.isValue || false, this.raw = options.raw || [];
     }
 }
-class ParserError1 extends Error {
-    name = 'ParserError';
-}
-class Parser1 {
-    expressions = new Map;
-    plugins = new Map;
-    templates = {
-        AccessVariables: (expressionType = "AccessVariable", tokenTypes = [])=>(arg)=>{
-                const { tools: { next , getToken , getIndex , expectTypes , previous , isEnd  } , tokens , ast: mainAst  } = arg;
-                const ast = new AST1(expressionType, {
-                    data: {
-                        isValue: true,
-                        body: []
-                    }
-                });
-                ast.data.body.push(getToken());
-                ast.raw.push(...ast.data.body[0].raw);
-                ast.trace = ast.data.body[0].trace;
-                ast.stack = Stack1.combine(10, mainAst.stack, ast.data.body[0]?.stack);
-                ast.start = ast.data.body[0].position;
-                let nextToken = ast.data.body[0];
-                while(!isEnd()){
-                    try {
-                        expectTypes(getToken(getIndex() + 1), ...tokenTypes);
-                        nextToken = next();
-                        ast.data.body.push(nextToken);
-                        ast.raw.push(...nextToken.raw);
-                    } catch  {
-                        break;
-                    }
-                }
-                ast.end = nextToken?.position || ast.data.body[ast.data.body.length - 1]?.position;
-                return ast;
-            }
-        ,
-        Numbers: (expressionType = "NumberLiteral", tokenTypes = [])=>(arg)=>{
-                const { tools: { next , getToken , getIndex , expectTypes , previous , isEnd  } , tokens , ast: mainAst  } = arg;
-                const ast = new AST1(expressionType, {
-                    data: {
-                        isValue: true,
-                        body: []
-                    }
-                });
-                ast.data.body.push(getToken());
-                ast.trace = ast.data.body[0].trace;
-                ast.stack = Stack1.combine(10, mainAst.stack, ast.data.body[0].stack);
-                ast.start = ast.data.body[0].position;
-                let nextToken = ast.data.body[0];
-                while(!isEnd()){
-                    try {
-                        expectTypes(getToken(getIndex() + 1), ...tokenTypes);
-                        nextToken = next();
-                        ast.data.body.push(nextToken);
-                    } catch  {
-                        break;
-                    }
-                }
-                ast.raw.push(...ast.data.body.map((v)=>v.value
-                ));
-                ast.end = nextToken?.position || ast.data.body[ast.data.body.length - 1]?.position;
-                return ast;
-            }
-    };
-    addAccessVariables(expressionType = "AccessVariable", tokenTypes) {
-        this.expressions.set(`ALPHABET`, this.templates.AccessVariables(expressionType, tokenTypes));
-        return this;
-    }
-    addNumbers(expressionType = "NumberLiteral", tokenTypes) {
-        this.expressions.set(`NUMBER`, this.templates.Numbers(expressionType, tokenTypes));
-        return this;
-    }
-    addOneTypeExpressions(tokenType, ...expressionCallbacks) {
-        for (const expressionCallback of expressionCallbacks)this.expressions.set(tokenType, expressionCallback);
-        return this;
-    }
-    addExpression(tokenType, expressionCallback) {
-        this.expressions.set(tokenType, expressionCallback);
-        return this;
-    }
-    run(tokens, data = {
-        i: 0,
-        stack: new Stack1
-    }) {
-        const { expressions , plugins  } = this;
-        const ast = new AST1(data?.type || "Main", {
-            data: {
-                isValue: !!(data?.type && data?.type !== "Main"),
-                body: []
-            }
+function getError(data) {
+    function error(message, token) {
+        throw new ParserError(message, {
+            start: token.start,
+            end: token.end,
+            stack: token.stack,
+            raw: token.value
         });
-        let token;
-        if (!data.i) data.i = 0;
-        for(; data.i < tokens.length; data.i++){
-            token = tokens[data.i];
-            const expression = expressions.get(token.type);
-            let ind = data.i;
-            if (!ast.start) {
-                ast.start = token.position;
-                ast.trace = token.trace;
-                ast.stack = Stack1.combine(10, data.stack, token.stack);
+    }
+    error.unexpectedOperator = (operator)=>error(`Unexpected operator ${String(operator.type)}`, operator)
+    ;
+    error.unexpectedToken = (token)=>error(`Unexpected token ${String(token.type)}`, token)
+    ;
+    error.expectedOneOfTheseTokensInsteadGot = (token, expected)=>error(`Expected one of these tokens: (${expected.map(String).join(", ")}), instead got ${String(token.type)}`, token)
+    ;
+    error.expectedTokenInsteadGot = (token, expected)=>error(`Expected token ${String(expected)}, instead got ${String(token.type)}`, token)
+    ;
+    error.unexpectedEndOfLine = (token)=>error(`Unexpected end of line`, token)
+    ;
+    error.expressionIsNotExist = (token)=>error(`Expression for ${String(token.type)} is not exist`, token)
+    ;
+    error.operatorIsNotExist = (operator)=>error(`Operator for ${String(operator.type)} is not exist`, operator)
+    ;
+    error.expectedValue = (expression)=>{
+        throw new ParserError(`Expected value`, {
+            raw: expression.raw.join(""),
+            start: expression.tree.start.start,
+            end: expression.tree.end.end,
+            stack: expression.tree.stack
+        });
+    };
+    return error;
+}
+function getTools(list, __data__, error) {
+    const { data , expressions , plugins , operators , run  } = __data__;
+    return {
+        isEnd: (ind = data.i)=>list.length <= ind + 1
+        ,
+        getTree: (ind = data.i)=>{
+            return list[ind];
+        },
+        getIndex: ()=>data.i
+        ,
+        expectValue: (expression)=>!expression.tree.isValue && error.expectedValue(expression)
+        ,
+        next (filter = []) {
+            const _ = Array.isArray(filter) ? (tree)=>!filter.includes(String(tree.token?.type))
+             : filter;
+            while(1){
+                list[++data.i] ?? error.unexpectedEndOfLine(list[data.i - 1]);
+                if (_(list[data.i])) return list[data.i];
             }
-            if (data.i >= tokens.length - 1) ast.end = token.position;
-            function error(message, token = tokens[data.i]) {
-                throw new ParserError1(message, {
-                    position: token.position,
-                    stack: token.stack
-                });
+        },
+        previous (filter = []) {
+            const _ = Array.isArray(filter) ? (tree)=>filter.includes(String(tree.token?.type))
+             : filter;
+            while(data.i > 0){
+                if (_(list[--data.i])) return list[data.i];
             }
-            error.unexpectedToken = (token = tokens[data.i])=>error(`Unexpected token TOKEN(${token.type})`, token)
-            ;
-            error.expectedOneOfTheseTokensInsteadGot = (token = tokens[data.i], expected)=>error(`Expected one of these tokens: LIST(${expected.map((type)=>`TOKEN(${type})`
-                ).join(" : ")}), instead got TOKEN(${token.type})`, token)
-            ;
-            error.expectedTokenInsteadGot = (token = tokens[data.i], expected)=>error(`Expected token TOKEN(${expected}), instead got TOKEN(${token.type})`, token)
-            ;
-            error.unexpectedEndOfLine = (token = tokens[data.i])=>error(`Unexpected end of line`, token)
-            ;
-            error.expressionIsNotExist = (token = tokens[data.i])=>error(`Expression for TOKEN(${token.type}) is not exist`, token)
-            ;
-            ast.end = token.position;
-            switch(data?.type){
-                case "Main":
-                    break;
-                case "Value":
-                    {
-                        if (data?.end.includes(token.type)) return ast;
-                        break;
-                    }
-            }
-            if (!expression) error.expressionIsNotExist();
-            const arg = {
-                expressions,
-                data,
-                tools: {
-                    isEnd: ()=>tokens.length <= data.i + 1
-                    ,
-                    getToken: (ind = data.i)=>tokens[ind]
-                    ,
-                    getIndex: ()=>data.i
-                    ,
-                    next (filter = []) {
-                        const _ = Array.isArray(filter) ? (token)=>filter.includes(token.type)
-                         : filter;
-                        while(1){
-                            tokens[++data.i] ?? error.unexpectedEndOfLine(tokens[data.i - 1]);
-                            if (!_(tokens[data.i])) return tokens[data.i];
-                        }
-                    },
-                    previous (filter = []) {
-                        const _ = Array.isArray(filter) ? (token)=>filter.includes(token.type)
-                         : filter;
-                        while(data.i > -1){
-                            if (!_(tokens[--data.i])) return tokens[data.i];
-                        }
-                    },
-                    expectTypes: (token, ...types)=>!types.includes(token.type) && error.expectedOneOfTheseTokensInsteadGot(token, types)
-                    ,
-                    expectType: (token, type)=>token.type !== type && error.expectedTokenInsteadGot(token, type)
-                    ,
-                    getValue: (end)=>{
-                        const clone = {
-                            ...data
-                        };
-                        clone.type = "Value";
-                        clone.end = end;
-                        const returned = this.run(tokens, clone);
-                        data.i = clone.i;
-                        return returned.data.body[0];
-                    },
-                    error
-                },
-                tokens,
-                ast,
-                plugins
+        },
+        expectTypes: (token, types)=>!types.includes(token.type) && error.expectedOneOfTheselistInsteadGot(token, types)
+        ,
+        expectType: (token, type)=>token.type !== type && error.expectedTokenInsteadGot(token, type)
+        ,
+        async getValue (tree, end) {
+            const clone = {
+                ...data
             };
-            if (typeof expression === "function") {
-                ast.data.body.push(expression(arg));
+            let tr = tree;
+            if (!(tree instanceof TokenLessListTree || tree instanceof TokenListTree)) {
+                tr = tree;
+                tr = new TokenListTree(tr.stack, tr.start, tr.end, tr.isValue, tr.token, [
+                    tr
+                ]);
             }
-            ast.raw.push(...tokens.slice(Math.min(data.i, ind), Math.max(data.i, ind) + 1).map((token)=>token.raw
-            ));
+            clone.type = "Value";
+            clone.isEnd = end;
+            const returned = await run({
+                expressions,
+                plugins,
+                list,
+                operators,
+                data: clone,
+                tree: tr
+            });
+            return {
+                ast: returned,
+                data: clone
+            };
+        },
+        error
+    };
+}
+async function parseTree(arg) {
+    const { expressions , plugins , tree , operators , data  } = arg;
+    const ast = new AST(data?.type || "Program", {
+        isValue: !!(data?.type && data?.type !== "Program"),
+        body: [],
+        start: tree.start,
+        raw: []
+    });
+    if (!data.i) data.i = 0;
+    const error = getError(data);
+    for(; data.i < tree.list.length; data.i++){
+        const tr = tree.list[data.i];
+        switch(true){
+            case tr instanceof TokenListTree:
+                {
+                    const tree = tr;
+                    const f = expressions.get(tree.token.type);
+                    const clone = {
+                        ...data
+                    };
+                    const carg = {
+                        ...arg
+                    };
+                    clone.i = 0;
+                    carg.data = clone;
+                    const tools = getTools(tree.list, {
+                        ...carg,
+                        run: parseTree
+                    }, error);
+                    const expression = new Expression(f.name, tree);
+                    const baseArg = {
+                        expressions,
+                        operators,
+                        data: clone,
+                        tools,
+                        ast,
+                        plugins,
+                        list: tree.list,
+                        expression
+                    };
+                    tools.push = expression.list.push.bind(expression.list);
+                    expression.raw.push(tree.start.value);
+                    for (const tokenParser of f.list){
+                        switch(true){
+                            case tokenParser instanceof Type:
+                                {
+                                    const tr = tree.list[clone.i++];
+                                    const tP = tokenParser;
+                                    tools.expectType(tr.token, tP.type);
+                                    await tP.callback({
+                                        ...baseArg,
+                                        tree: tr
+                                    });
+                                    break;
+                                }
+                            case tokenParser instanceof Operator:
+                                {
+                                    await tokenParser.callback(baseArg);
+                                    break;
+                                }
+                            case tokenParser instanceof Custom:
+                                {
+                                    await tokenParser.callback(baseArg);
+                                    break;
+                                }
+                            case tokenParser instanceof Rest:
+                                {
+                                    let stop = false;
+                                    const copy = {
+                                        ...baseArg
+                                    };
+                                    const end = ()=>stop = true
+                                    ;
+                                    const parser = tokenParser;
+                                    copy.tools = {
+                                        ...copy.tools
+                                    };
+                                    copy.tools.end = end;
+                                    while(!stop){
+                                        await parser.callback(copy);
+                                    }
+                                    break;
+                                }
+                            case tokenParser instanceof Value:
+                                {
+                                    const value = await baseArg.tools.getValue();
+                                    tools.expectValue(value.ast);
+                                    await tokenParser.callback({
+                                        ...value,
+                                        ...baseArg
+                                    });
+                                    break;
+                                }
+                            case tokenParser instanceof Base1:
+                                throw new Error(`Shouldn't use Base of TokenParser.`);
+                            default:
+                                throw new Error(`Invalid TokenParser.`);
+                        }
+                    }
+                    expression.raw.push(tree.end.value);
+                    ast.body.push(await f.callback(baseArg));
+                    break;
+                }
+            case tr instanceof TokenLessListTree:
+                throw new Error(`Unexpected TokenLessList tree`);
+            case tr instanceof TokenListLessTree:
+                {
+                    const tree = tr;
+                    const f = expressions.get(tree.token.type);
+                    const tools = getTools([], {
+                        ...arg,
+                        run: parseTree
+                    }, error);
+                    const expression = new Expression(f.name, tree);
+                    const baseArg = {
+                        expressions,
+                        operators,
+                        data,
+                        tools,
+                        ast,
+                        plugins,
+                        list: [],
+                        expression
+                    };
+                    expression.raw.push(tree.token.value);
+                    ast.body.push(await f.callback(baseArg));
+                    break;
+                }
         }
-        ast.end = token?.position || ast.start;
-        return ast;
+        if (ast.type === "Value" && (data.isEnd && await data.isEnd(tr, ast) || !data.isEnd)) {
+            ast.end = tr.end;
+            break;
+        }
+    }
+    if (ast.type === "Value" && data.isEnd) error.unexpectedEndOfLine(tree.end);
+    ast.raw.push(...ast.body.map((a)=>a.raw.join("")
+    ));
+    ast.end = ast.body[ast.body.length - 1]?.tree.end || tree.end;
+    return ast;
+}
+class Parser {
+    expressions = new Map;
+    operators = new Map;
+    plugins = new Map;
+    addExpression(type, options) {
+        this.expressions.set(type, options);
+        return this;
+    }
+    async run(tokens, data = {
+        stack: new Stack
+    }) {
+        const { expressions , plugins , operators  } = this;
+        if (!tokens.length) throw new Error(`Tokens cannot be empty`);
+        const tree = new TokenLessListTree(data.stack, tokens[0]);
+        const info = {
+            i: 0,
+            ...data
+        };
+        const error = getError(info);
+        for(; info.i < tokens.length; info.i++){
+            const token = tokens[info.i];
+            const a = await parseTokens(token, tokens, expressions, info, error);
+            tree.list.push(a);
+        }
+        return await parseTree({
+            expressions,
+            tree,
+            data,
+            plugins,
+            operators
+        });
     }
 }
-class TransformerError extends Error {
-    name = 'TransformerError';
-}
-class Code1 {
-    ast;
-    code;
-    constructor(ast, code){
-        this.ast = ast, this.code = code;
-    }
-}
-class Transformer1 {
+class Transformer {
     expressions = new Map;
     plugins = new Map;
     injected = {
         before: [],
         after: []
-    };
-    templates = {
-        AccessVariable (arg) {
-            const { ast  } = arg;
-            const name = ast.data.body.map((token)=>token.value
-            ).join("");
-            return name;
-        },
-        Numbers (arg) {
-            const { ast  } = arg;
-            return Number(ast.data.body.map((token)=>token.value
-            ).join(""));
-        }
     };
     injectBefore(code) {
         this.injected.before.push(code);
@@ -404,97 +638,58 @@ class Transformer1 {
         for (const expression of expressions)this.expressions.set(name, expression);
         return this;
     }
-    addAccessVariable(name = "AccessVariable") {
-        return this.addExpression(name, this.templates.AccessVariable);
-    }
-    addNumbers(name = "NumberLiteral") {
-        return this.addExpression(name, this.templates.Numbers);
-    }
-    run(ast) {
+    async run(ast) {
         const { expressions , plugins , injected  } = this;
         const result = [];
-        for (const exp of ast.data.body){
-            const func = this.expressions.get(exp.type);
-            function error(message, expression = exp) {
+        for (const expression1 of ast.body){
+            const func = this.expressions.get(expression1.type);
+            function error(message, expression) {
                 throw new TransformerError(message, {
-                    position: exp.position,
-                    stack: exp.stack
+                    start: expression.tree.start.start,
+                    end: expression.tree.end.end,
+                    stack: expression.tree.stack,
+                    raw: expression.raw.join("")
                 });
             }
-            error.unexpectedExpression = (ast = exp)=>error(`Unexpected expression EXPRESSION(${ast.type})`, ast)
+            error.unexpectedExpression = (expression)=>error(`Unexpected expression ${String(expression.type)}`, expression)
             ;
-            error.expectedOneOfTheseExpressionsInsteadGot = (ast = exp, expected)=>error(`Expected one of these expressions: LIST(${expected.map((type)=>`EXPRESSION(${type})`
-                ).join(" : ")}), instead got EXPRESSION(${ast.type})`, ast)
+            error.expectedOneOfTheseExpressionsInsteadGot = (expression, expected)=>error(`Expected one of these expressions: (${expected.map(String).join(" : ")}), instead got ${String(expression.type)}`, expression)
             ;
-            error.expectedExpressionInsteadGot = (ast = exp, expected)=>error(`Expected expression EXPRESSION(${expected}), instead got EXPRESSION(${ast.type})`, ast)
+            error.expectedExpressionInsteadGot = (expression, expected)=>error(`Expected expression ${String(expected)}, instead got ${String(expression.type)}`, expression)
             ;
-            error.expressionIsNotExist = (ast = exp)=>error(`Expression EXPRESSION(${ast.type}) is not exist`, ast)
+            error.expressionIsNotExist = (expression)=>error(`Expression ${String(expression.type)} is not exist`, expression)
             ;
-            error.expectedValue = (ast = exp)=>error(`Expected value`, ast)
+            error.expectedValue = (expression)=>error(`Expected value`, expression)
             ;
-            if (!func) error.expressionIsNotExist();
-            result.push(new Code1(exp, func?.({
+            if (!func) error.expressionIsNotExist(expression1);
+            result.push(func?.({
                 expressions,
                 plugins,
-                ast: exp,
+                ast,
                 tools: {
                     error,
-                    expectTypes: (ast, types = [])=>!types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types)
+                    expectTypes: (expression, types = [])=>!types.includes(expression.type) && error.expectedOneOfTheseExpressionsInsteadGot(expression, types)
                     ,
-                    expectType: (ast, type)=>ast.type !== type && error.expectedExpressionInsteadGot(ast, type)
+                    expectType: (expression, type)=>expression.type !== type && error.expectedExpressionInsteadGot(expression, type)
                     ,
-                    expectValue: (ast)=>!ast.data.isValue && error.expectedValue(ast)
-                }
-            })));
+                    expectValue: (expression)=>!expression.tree.isValue && error.expectedValue(expression)
+                },
+                expression: expression1
+            }));
         }
         return [
             ...injected.before,
-            ...result.map((code)=>code.code
-            ),
+            ...result,
             ...injected.after
         ].join("");
     }
 }
-class Compiler2 {
-    lexer = new Lexer1;
-    parser = new Parser1;
-    transformer = new Transformer1;
-    run(code, file, stack = new Stack1) {
-        const { lexer , parser , transformer  } = this;
-        const lexed = lexer.run(code, file, stack);
-        const ast = parser.run(lexed);
-        const compiled = transformer.run(ast);
-        return compiled;
-    }
-}
-class ExecuterError extends Error {
-    name = 'ExecuterError';
-}
-class Execute1 {
-    ast;
-    callback;
-    constructor(ast, callback){
-        this.ast = ast, this.callback = callback;
-    }
-}
-class Executer1 {
+class Executer {
     expressions = new Map;
     plugins = new Map;
     injected = {
         before: [],
         after: []
-    };
-    templates = {
-        AccessVariable (arg) {
-            const { ast  } = arg;
-            return ast.data.body.map((token)=>token.value
-            ).join("");
-        },
-        Numbers (arg) {
-            const { ast  } = arg;
-            return Number(ast.data.body.map((token)=>token.value
-            ).join(""));
-        }
     };
     injectBefore(callback) {
         this.injected.before.push(callback);
@@ -512,96 +707,68 @@ class Executer1 {
         for (const expression of expressions)this.expressions.set(name, expression);
         return this;
     }
-    addAccessVariable(name = "AccessVariable") {
-        return this.addExpression(name, this.templates.AccessVariable);
-    }
-    addNumbers(name = "NumberLiteral") {
-        return this.addExpression(name, this.templates.Numbers);
-    }
     async run(ast) {
         const { expressions , plugins , injected  } = this;
-        const result = [];
-        for (const exp of ast.data.body){
-            const func = this.expressions.get(exp.type);
-            function error(message, expression = exp) {
+        let ret;
+        for (const cb of injected.before)ret = await cb();
+        for (const expression1 of ast.body){
+            const func = this.expressions.get(expression1.type);
+            function error(message, expression) {
                 throw new ExecuterError(message, {
-                    position: exp.position,
-                    stack: exp.stack
+                    start: expression.tree.start.start,
+                    end: expression.tree.end.end,
+                    stack: expression.tree.stack,
+                    raw: expression.raw.join("")
                 });
             }
-            error.unexpectedExpression = (ast = exp)=>error(`Unexpected expression EXPRESSION(${ast.type})`, ast)
+            error.unexpectedExpression = (expression)=>error(`Unexpected expression ${String(expression.type)}`, expression)
             ;
-            error.expectedOneOfTheseExpressionsInsteadGot = (ast = exp, expected)=>error(`Expected one of these expressions: LIST(${expected.map((type)=>`EXPRESSION(${type})`
-                ).join(" : ")}), instead got EXPRESSION(${ast.type})`, ast)
+            error.expectedOneOfTheseExpressionsInsteadGot = (expression, expected)=>error(`Expected one of these expressions: (${expected.map(String).join(", ")}), instead got ${String(expression.type)}`, expression)
             ;
-            error.expectedExpressionInsteadGot = (ast = exp, expected)=>error(`Expected expression EXPRESSION(${expected}), instead got EXPRESSION(${ast.type})`, ast)
+            error.expectedExpressionInsteadGot = (expression, expected)=>error(`Expected expression ${String(expected)}, instead got ${String(expression.type)}`, expression)
             ;
-            error.expressionIsNotExist = (ast = exp)=>error(`Expression EXPRESSION(${ast.type}) is not exist`, ast)
+            error.expressionIsNotExist = (expression)=>error(`Expression ${String(expression.type)} is not exist`, expression)
             ;
-            error.expectedValue = (ast = exp)=>error(`Expected value`, ast)
+            error.expectedValue = (expression)=>error(`Expected value`, expression)
             ;
-            if (!func) error.expressionIsNotExist();
-            result.push(new Execute1(exp, ()=>func?.({
-                    expressions,
-                    plugins,
-                    ast: exp,
-                    tools: {
-                        error,
-                        expectTypes: (ast, types = [])=>!types.includes(ast.type) && error.expectedOneOfTheseExpressionsInsteadGot(ast, types)
-                        ,
-                        expectType: (ast, type)=>ast.type !== type && error.expectedExpressionInsteadGot(ast, type)
-                        ,
-                        expectValue: (ast)=>!ast.data.isValue && error.expectedValue(ast)
-                        ,
-                        getValue: (filter = [])=>{
-                            const _ = Array.isArray(filter) ? (exp)=>filter.includes(ast.type)
-                             : filter;
-                            for (const exp of result){
-                                if (exp.ast.data.isValue && !_(exp.ast)) return exp;
-                            }
-                        }
-                    }
-                })
-            ));
+            if (!func) error.expressionIsNotExist(expression1);
+            ret = await func?.({
+                expressions,
+                plugins,
+                ast,
+                expression: expression1,
+                tools: {
+                    error,
+                    expectTypes: (expression, types = [])=>!types.includes(expression.type) && error.expectedOneOfTheseExpressionsInsteadGot(expression, types)
+                    ,
+                    expectType: (expression, type)=>expression.type !== type && error.expectedExpressionInsteadGot(expression, type)
+                    ,
+                    expectValue: (expression)=>!expression.tree.isValue && error.expectedValue(expression)
+                }
+            });
         }
-        const done = [
-            ...injected.before,
-            ...result.map((exec)=>exec.callback
-            ),
-            ...injected.after
-        ];
-        let ret;
-        for (const cb of done)ret = await cb();
+        for (const cb1 of injected.after)ret = await cb1();
         return ret;
     }
 }
-class Compiler1 {
-    lexer = new Lexer1;
-    parser = new Parser1;
-    executer = new Executer1;
-    run(code, file, stack = new Stack1) {
-        const { lexer , parser , executer  } = this;
-        const lexed = lexer.run(code, file, stack);
-        const ast = parser.run(lexed);
-        const result = executer.run(ast);
-        return result;
-    }
-}
-export { Lexer1 as Lexer };
-export { Parser1 as Parser };
-export { AST1 as AST };
-export { Error as Error };
-export { LexerError1 as LexerError };
-export { ParserError1 as ParserError };
-export { Position1 as Position };
-export { Stack1 as Stack };
-export { Token1 as Token };
-export { Trace1 as Trace };
-export { Transformer1 as Transformer };
-export { Compiler2 as Compiler };
-export { Executer1 as Executer };
-export { Compiler1 as Interpreter };
-export { Execute1 as Execute };
-export { Code1 as Code };
-const version1 = "v0.7";
-export { version1 as version };
+Object.assign({
+    Lexer: LexerError,
+    Parser: ParserError,
+    Excuter: ExecuterError,
+    Transformer: TransformerError
+}, Base);
+export { Base as Error };
+export { Expression as Expression };
+export { Lexer as Lexer };
+export { Parser as Parser };
+export { AST as AST };
+export { Position as Position };
+export { Stack as Stack };
+export { Token as Token };
+export { Trace as Trace };
+export { Transformer as Transformer };
+export { Executer as Executer };
+const version = "v2.2";
+export { mod as TokenParser };
+export { mod1 as Tree };
+export { version as version };

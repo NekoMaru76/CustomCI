@@ -1,5 +1,5 @@
 export interface Base {
-  type: string;
+  type: string | symbol;
   startValues: string[];
   mustSkip: boolean;
   canCollide: boolean;

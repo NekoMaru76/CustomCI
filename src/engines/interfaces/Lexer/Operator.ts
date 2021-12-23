@@ -1,6 +1,6 @@
 export default interface Operator {
   level: number;
-  type: string;
+  type: string | symbol;
   value: string;
   mustSkip: boolean;
 };
