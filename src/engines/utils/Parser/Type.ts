@@ -1,10 +1,10 @@
 import Base from "./Base.ts";
 
 export default class Type extends Base {
-  type: string;
+  type: string | symbol;
   callback: Function;
 
-  constructor(callback: Function, type: string) {
+  constructor(callback: Function, type: string | symbol) {
     super();
 
     this.type = type;
