@@ -65,11 +65,8 @@ export interface ParserTokenCallbackArgument extends Argument {
 };
 export interface ParserTokenArgument extends ParserTokenCallbackArgument {
   tools: ParserTokenTools;
+  tree: Tree.TokenList | Tree.TokenListLess;
 };
-export interface RestParserTokenArgument extends ParserTokenCallbackArgument {
+export interface RestParserTokenArgument extends ParserTokenArgument {
   tools: RestParserTokenTools;
 };
-export interface RestParserTokenCallbackArgument extends RestParserTokenArgument {
-  tree: Tree.TokenListLess | Tree.TokenList;
-};
-export interface ValueParserTokenCallbackArgument extends ParserTokenArgument, GetValue {};

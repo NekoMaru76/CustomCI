@@ -488,7 +488,7 @@ async function parseTree(arg) {
                         switch(true){
                             case tokenParser instanceof Type:
                                 {
-                                    const tr = tree.list[++clone.i];
+                                    const tr = tree.list[clone.i++];
                                     const tP = tokenParser;
                                     tools.expectType(tr.token, tP.type);
                                     await tP.callback({
@@ -781,7 +781,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.5";
+const version = "v2.6";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };

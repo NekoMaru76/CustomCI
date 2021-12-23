@@ -69,7 +69,7 @@ export default async function parseTree(arg: IArgument.ParseTokensArgument): Pro
         for (const tokenParser of f.list) {
           switch (true) {
             case tokenParser instanceof TokenParser.Type: {
-              const tr: Tree.TokenListLess | Tree.TokenList = tree.list[++clone.i];
+              const tr: Tree.TokenListLess | Tree.TokenList = tree.list[clone.i++];
               const tP = tokenParser as TokenParser.Type;
 
               tools.expectType(tr.token, tP.type);
