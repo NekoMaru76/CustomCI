@@ -781,7 +781,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.2";
+const version = "v2.4";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };
