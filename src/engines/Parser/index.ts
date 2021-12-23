@@ -27,7 +27,7 @@ export default class Parser {
   operators: Map<string | symbol, IOperator> = new Map;
   plugins: Map<string | symbol, any> = new Map;
 
-  addExpression(type: string, options: IExpression.TreeExpression): Parser {
+  addExpression(type: string | symbol, options: IExpression.TreeExpression): Parser {
     this.expressions.set(type, options);
 
     return this;
