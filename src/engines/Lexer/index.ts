@@ -169,11 +169,14 @@ export default class Lexer {
         }
 
         if (!next) {
-          result.push(new Token(unknown, char, {
+          bef = new Token(unknown, char, {
             start: traceStart,
             end: traceStart,
             stack: currentStack
-          }));
+          });
+          befCanCollide = false;
+
+          result.push(bef);
 
           i++;
           c++;

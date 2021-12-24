@@ -301,11 +301,13 @@ class Lexer {
                     }
                 }
                 if (!next) {
-                    result.push(new Token(unknown, __char, {
+                    bef = new Token(unknown, __char, {
                         start: traceStart,
                         end: traceStart,
                         stack: currentStack
-                    }));
+                    });
+                    befCanCollide = false;
+                    result.push(bef);
                     i++;
                     c++;
                 }
@@ -398,7 +400,7 @@ function getTools(list, __data__, error) {
             const _ = Array.isArray(filter) ? (tree)=>!filter.includes(String(tree.token?.type))
              : filter;
             while(1){
-                list[++data.i] ?? error.unexpectedEndOfLine(list[data.i - 1]);
+                list[++data.i] ?? error.unexpectedEndOfLine(list[data.i - 1].token);
                 if (_(list[data.i])) return list[data.i];
             }
         },
@@ -417,13 +419,6 @@ function getTools(list, __data__, error) {
             const clone = {
                 ...data
             };
-            let tr = tree;
-            if (!(tree instanceof TokenLessListTree || tree instanceof TokenListTree)) {
-                tr = tree;
-                tr = new TokenListTree(tr.stack, tr.start, tr.end, tr.isValue, tr.token, [
-                    tr
-                ]);
-            }
             clone.type = "Value";
             clone.isEnd = end;
             const returned = await run({
@@ -432,7 +427,7 @@ function getTools(list, __data__, error) {
                 list,
                 operators,
                 data: clone,
-                tree: tr
+                tree
             });
             return {
                 ast: returned,
@@ -483,7 +478,6 @@ async function parseTree(arg) {
                         expression
                     };
                     tools.push = expression.list.push.bind(expression.list);
-                    expression.raw.push(tree.start.value);
                     for (const tokenParser of f.list){
                         switch(true){
                             case tokenParser instanceof Type:
@@ -541,7 +535,6 @@ async function parseTree(arg) {
                                 throw new Error(`Invalid TokenParser.`);
                         }
                     }
-                    expression.raw.push(tree.end.value);
                     const copy = {
                         ...baseArg
                     };
@@ -781,7 +774,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.7";
+const version = "v2.9";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };

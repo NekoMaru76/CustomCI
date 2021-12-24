@@ -27,4 +27,4 @@ export { default as Token } from "./src/engines/utils/Token.ts";
 export { default as Trace } from "./src/engines/utils/Trace.ts";
 export { default as Transformer } from "./src/engines/Transformer/index.ts";
 export { default as Executer } from "./src/engines/Executer/index.ts";
-export const version = "v2.8";
+export const version = "v2.9";
