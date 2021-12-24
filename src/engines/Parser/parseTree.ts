@@ -64,8 +64,6 @@ export default async function parseTree(arg: IArgument.ParseTokensArgument): Pro
 
         tools.push = expression.list.push.bind(expression.list);
 
-        expression.raw.push(tree.start.value);
-
         for (const tokenParser of f.list) {
           switch (true) {
             case tokenParser instanceof TokenParser.Type: {
@@ -124,8 +122,6 @@ export default async function parseTree(arg: IArgument.ParseTokensArgument): Pro
             default: throw new Error(`Invalid TokenParser.`);
           }
         }
-
-        expression.raw.push(tree.end.value);
 
         const copy = { ...baseArg } as any;
 

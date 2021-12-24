@@ -20,7 +20,7 @@ export default async function parseTokens(token: Token, tokens: Token[], express
 
         list.push(await parseTokens(token, tokens, expressions, data, error));
       }
-
+      
       return new Tree.TokenList(data.stack, token, tokens[data.i], exp.isValue, token, list);
     }
     default: return new Tree.TokenListLess(data.stack, token, token, f?.isValue, token);
