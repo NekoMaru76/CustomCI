@@ -326,7 +326,7 @@ async function parseTokens(token, tokens, expressions, data, error) {
                 while(1){
                     const token = tokens[++data.i];
                     if (!token) error.unexpectedEndOfLine(tokens[data.i - 1]);
-                    if (await exp.isEnd(token)) break;
+                    if (await exp.isEnd(token, tokens, data)) break;
                     list.push(await parseTokens(token, tokens, expressions, data, error));
                 }
                 return new TokenListTree(data.stack, token, tokens[data.i], exp.isValue, token, list);
@@ -781,7 +781,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.6";
+const version = "v2.7";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };

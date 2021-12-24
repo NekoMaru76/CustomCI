@@ -18,7 +18,7 @@ export interface TreeListLessExpression {
 
 export interface TreeListExpression extends Omit<TreeListLessExpression, "isList"> {
   //isEnd: (tree: Tree.TokenListLess | Tree.TokenList, ast: AST) => boolean | Promise<boolean>;
-  isEnd: (token: Token) => boolean | Promise<boolean>;
+  isEnd: Function;
   list: Base[];
   isList: true;
 };

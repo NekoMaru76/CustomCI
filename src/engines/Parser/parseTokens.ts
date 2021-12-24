@@ -16,7 +16,7 @@ export default async function parseTokens(token: Token, tokens: Token[], express
         const token = tokens[++data.i];
 
         if (!token) error.unexpectedEndOfLine(tokens[data.i-1]);
-        if (await exp.isEnd(token)) break;
+        if (await exp.isEnd(token, tokens, data)) break;
 
         list.push(await parseTokens(token, tokens, expressions, data, error));
       }

@@ -28,7 +28,7 @@ parser
     isValue: true,
     isList: true,
     name: "CallExpression",
-    isEnd: (token: Token) => token.type === "CLOSE_BRACKET",
+    isEnd: (token: Token, tokens: Token[], data: any) => token.type === "CLOSE_BRACKET",
     list: [
       new TokenParser.Type(() => {}, "OPEN_BRACKET"),
       new TokenParser.Rest(async ({ expression, ast, tools, data }: ParserArgument.RestParserTokenArgument) => {
