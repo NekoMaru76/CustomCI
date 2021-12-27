@@ -70,7 +70,7 @@ export default class Transformer {
 
       if (!func) error.expressionIsNotExist(expression);
 
-      result.push(func?.({
+      result.push(await func?.({
         expressions,
         plugins,
         ast,

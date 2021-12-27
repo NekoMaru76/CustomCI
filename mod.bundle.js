@@ -668,7 +668,7 @@ class Transformer {
             error.expectedValue = (expression)=>error(`Expected value`, expression)
             ;
             if (!func) error.expressionIsNotExist(expression1);
-            result.push(func?.({
+            result.push(await func?.({
                 expressions,
                 plugins,
                 ast,
@@ -774,7 +774,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.9";
+const version = "v2.10";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };
