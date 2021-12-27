@@ -72,9 +72,9 @@ export default class Lexer {
         } else {
           c++;
         }
-      }
 
-      i++;
+        i++;
+      }
     }
 
     for (; i < code.length;) {
@@ -120,7 +120,7 @@ export default class Lexer {
           }
 
 
-          const posEnd = new Position(i-1, c-1, l, file);
+          const posEnd = new Position(i, c, l, file);
           const traceEnd = new Trace(`[Lexer]`, posEnd);
 
           if (!mustSkip) {
@@ -177,9 +177,7 @@ export default class Lexer {
           befCanCollide = false;
 
           result.push(bef);
-
-          i++;
-          c++;
+          counter(char);
         }
       }
     }

@@ -228,8 +228,8 @@ class Lexer {
                 } else {
                     c++;
                 }
+                i++;
             }
-            i++;
         }
         for(; i < code.length;){
             const __char = code[i];
@@ -261,7 +261,7 @@ class Lexer {
                             }
                         }
                     }
-                    const posEnd = new Position(i - 1, c - 1, l, file);
+                    const posEnd = new Position(i, c, l, file);
                     const traceEnd = new Trace(`[Lexer]`, posEnd);
                     if (!mustSkip) {
                         const token = new Token(type, vs.join(""), {
@@ -308,8 +308,7 @@ class Lexer {
                     });
                     befCanCollide = false;
                     result.push(bef);
-                    i++;
-                    c++;
+                    counter(__char);
                 }
             }
         }
@@ -774,7 +773,7 @@ export { Token as Token };
 export { Trace as Trace };
 export { Transformer as Transformer };
 export { Executer as Executer };
-const version = "v2.10";
+const version = "v2.11";
 export { mod as TokenParser };
 export { mod1 as Tree };
 export { version as version };
